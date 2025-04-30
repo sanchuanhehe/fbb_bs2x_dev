@@ -31,3 +31,9 @@ jobs:
       run: |
         cd src
         python build.py -c -ninja
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: standard-bs21e-1100e
+        path: src/output/bs21e/fwpkg/standard-bs21e-1100e
