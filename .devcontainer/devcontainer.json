@@ -1,0 +1,34 @@
+{
+  "name": "bs2xdev",
+  "context": "..",
+  "dockerFile": "Dockerfile",
+  "workspaceFolder": "/workspace/src",
+  "remoteUser": "root",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "GitHub.copilot",
+        "twxs.cmake",
+        "ms-vscode.cpptools",
+        "cschlosser.doxdocgen",
+        "vinirossa.vscode-gitandgithub-pack",
+        "ms-python.debugpy",
+        "ms-python.python",
+        "luveti.kconfig",
+        "intellsmi.comment-translate",
+        "KevinRose.vsc-python-indent",
+        "ms-vscode.vscode-serial-monitor",
+        "Gruntfuggly.todo-tree",
+        "KylinIDETeam.cmake-intellisence",
+        "xaver.clang-format",
+        "MS-CEINTL.vscode-language-pack-zh-hans",
+        "GitHub.copilot-chat",
+        "DavidAnson.vscode-markdownlint"
+      ]
+    }
+  }
+}
