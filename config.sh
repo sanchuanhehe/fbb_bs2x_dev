@@ -4,7 +4,7 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # 更新系统并安装必要的工具和依赖
-sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get update
 sudo apt-get install -y \
     cmake \
     python3 \
