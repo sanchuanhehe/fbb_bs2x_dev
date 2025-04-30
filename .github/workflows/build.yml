@@ -30,4 +30,4 @@ jobs:
     - name: Build and Compile
       run: |
         cd src
-        python build.py -c -ninja standard-bs21-n1100
+        python build.py -c -ninja
