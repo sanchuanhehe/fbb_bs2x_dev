@@ -1,0 +1,1 @@
+set(SOURCES "${SOURCES}" "${CMAKE_CURRENT_SOURCE_DIR}/usb_button_demo.c" "${CMAKE_CURRENT_SOURCE_DIR}/usb_init_app.c" "${CMAKE_CURRENT_SOURCE_DIR}/usb_mouse.c" PARENT_SCOPE)
