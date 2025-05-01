@@ -38,8 +38,10 @@ jobs:
 
     - name: Prepare Release Artifacts
       run: |
+        pwd
         mkdir -p release-artifacts
         cp -r src/output/bs21e/fwpkg/standard-bs21e-1100e release-artifacts/
+        rm -rf output
         zip -r source-code.zip . -x "*.git*"
         mv source-code.zip release-artifacts/
 
