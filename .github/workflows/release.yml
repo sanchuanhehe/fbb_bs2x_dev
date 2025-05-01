@@ -27,7 +27,7 @@ jobs:
         file: .devcontainer/Dockerfile-for-build-image
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/bs2xdev:latest
+          ${{ !contains(github.ref_name, 'rc') && format('ghcr.io/{0}/bs2xdev:latest', github.repository_owner) || '' }}
           ghcr.io/${{ github.repository_owner }}/bs2xdev:${{ github.ref_name }}
 
     - name: Build Project
