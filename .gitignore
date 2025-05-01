@@ -2,3 +2,4 @@
 src/output
 *.pyc
 src/tools/pkg/fwpkg/bs21e/bs21e_all.fwpkg
+src/compile_commands.json

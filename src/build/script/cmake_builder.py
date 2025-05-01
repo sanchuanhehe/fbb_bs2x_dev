@@ -213,7 +213,7 @@ class CMakeBuilder(BuildEnvironment):
             env.extend("defines", "NO_TIMEOUT")
         if self.build_as_lib:
             env.add("GEN_ONLY_LIB_PATH")
-        self.cmake_cmd = ['cmake', '-G', self.generator, '-Wno-dev', '--no-warn-unused-cli', '-DCMAKE_C_COMPILER_WORKS=TRUE', '-DCMAKE_CXX_COMPILER_WORKS=TRUE']
+        self.cmake_cmd = ['cmake', '-G', self.generator, '-Wno-dev', '--no-warn-unused-cli', '-DCMAKE_C_COMPILER_WORKS=TRUE', '-DCMAKE_CXX_COMPILER_WORKS=TRUE' ,'-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
         if env.get('fp_enable'):
             env.append('defines', 'SUPPORT_CALLSTACK')
             env.append('ccflags', '-fno-omit-frame-pointer')
@@ -245,7 +245,11 @@ class CMakeBuilder(BuildEnvironment):
         self.add_cmake_param("-DROM_CHECK=False")
         self.start(env, target_name, output_path, clean=self.need_clean, nhso=self.no_hso)
         self.rom_check(env, target_name, output_path)
-
+         # 如果编译完成存在 output_path/compile_commands.json,创建到项目根目录的软链接
+        if os.path.exists(os.path.join(output_path, 'compile_commands.json')):
+            if os.path.exists(os.path.join(root_path, 'compile_commands.json')):
+                os.remove(os.path.join(root_path, 'compile_commands.json'))
+            os.symlink(os.path.join(output_path, 'compile_commands.json'), os.path.join(root_path, 'compile_commands.json'))
         end_time = time.time()
         print("%s takes %f s" %  (target_name, end_time - start_time))
 
