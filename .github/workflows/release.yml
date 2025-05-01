@@ -58,14 +58,6 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload Source Code
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: release-artifacts/source-code.zip
-        asset_name: source-code.zip
-        asset_content_type: application/zip
-
     - name: Upload Compiled Artifact
       uses: actions/upload-release-asset@v1
       with:
