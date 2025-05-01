@@ -19,28 +19,29 @@
 #include "sle_keyboard_client.h"
 #include "sle_device_manager.h"
 
-#define SLE_MTU_SIZE_DEFAULT                        300
-#define SLE_SEEK_INTERVAL_DEFAULT                   100
-#define SLE_SEEK_WINDOW_DEFAULT                     100
-#define UUID_16BIT_LEN                              2
-#define UUID_128BIT_LEN                             16
-#define SLE_KEYBOARD_TASK_DELAY_MS                  1000
-#define SLE_KEYBOARD_WAIT_SLE_CORE_READY_MS         5000
-#define SLE_KEYBOARD_WAIT_SLE_ENABLE_MS             2000
+#define SLE_MTU_SIZE_DEFAULT 300
+#define SLE_SEEK_INTERVAL_DEFAULT 100
+#define SLE_SEEK_WINDOW_DEFAULT 100
+#define UUID_16BIT_LEN 2
+#define UUID_128BIT_LEN 16
+#define SLE_KEYBOARD_TASK_DELAY_MS 1000
+#define SLE_KEYBOARD_WAIT_SLE_CORE_READY_MS 5000
+#define SLE_KEYBOARD_WAIT_SLE_ENABLE_MS 2000
 #ifndef SLE_KEYBOARD_SERVER_NAME
-#define SLE_KEYBOARD_SERVER_NAME                    "sle_keyboard_server"
+#define SLE_KEYBOARD_SERVER_NAME "sle_keyboard_server"
 #endif
-#define SLE_KEYBOARD_DONGLE_LOG                     "[sle keyboard dongle]"
-#define ADDR_INDEX_0                                0
-#define ADDR_INDEX_4                                4
-#define ADDR_INDEX_5                                5
+#define SLE_KEYBOARD_DONGLE_LOG "[sle keyboard dongle]"
+#define ADDR_INDEX_0 0
+#define ADDR_INDEX_4 4
+#define ADDR_INDEX_5 5
 
-static ssapc_find_service_result_t g_sle_keyboard_find_service_result = { 0 };
-static sle_announce_seek_callbacks_t g_sle_keyboard_seek_cbk = { 0 };
-static sle_connection_callbacks_t g_sle_keyboard_connect_cbk = { 0 };
-static ssapc_callbacks_t g_sle_keyboard_ssapc_cbk = { 0 };
-static sle_addr_t g_sle_keyboard_remote_addr = { 0 };
-static ssapc_write_param_t g_sle_keyboard_send_param = { 0 };
+static ssapc_find_service_result_t g_sle_keyboard_find_service_result = {0};
+static sle_announce_seek_callbacks_t g_sle_keyboard_seek_cbk = {0};
+static sle_power_on_callback g_sle_keyboard_power_on_callback = {0};
+static sle_connection_callbacks_t g_sle_keyboard_connect_cbk = {0};
+static ssapc_callbacks_t g_sle_keyboard_ssapc_cbk = {0};
+static sle_addr_t g_sle_keyboard_remote_addr = {0};
+static ssapc_write_param_t g_sle_keyboard_send_param = {0};
 static uint16_t g_sle_keyboard_conn_id = 0;
 
 uint16_t get_sle_keyboard_conn_id(void)
@@ -55,7 +56,7 @@ ssapc_write_param_t get_sle_keyboard_send_param(void)
 
 void sle_keyboard_start_scan(void)
 {
-    sle_seek_param_t param = { 0 };
+    sle_seek_param_t param = {0};
     param.own_addr_type = 0;
     param.filter_duplicates = 0;
     param.seek_filter_policy = 0;
@@ -119,7 +120,8 @@ static void sle_keyboard_client_sample_seek_cbk_register(void)
     sle_announce_seek_register_callbacks(&g_sle_keyboard_seek_cbk);
 }
 
-static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *addr,
+static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_id,
+                                                                 const sle_addr_t *addr,
                                                                  sle_acb_state_t conn_state,
                                                                  sle_pair_state_t pair_state,
                                                                  sle_disc_reason_t disc_reason)
@@ -145,7 +147,7 @@ static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_i
     }
 }
 
-void  sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
+void sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
 {
     osal_printk("%s pair complete conn_id:%d, addr:%02x***%02x%02x\n", SLE_KEYBOARD_DONGLE_LOG, conn_id,
                 addr->addr[ADDR_INDEX_0], addr->addr[ADDR_INDEX_4], addr->addr[ADDR_INDEX_5]);
@@ -154,8 +156,7 @@ void  sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_a
         info.mtu_size = SLE_MTU_SIZE_DEFAULT;
         info.version = 1;
         ssapc_exchange_info_req(1, g_sle_keyboard_conn_id, &info);
-    }
-    else {
+    } else {
         osal_printk("%s pair complete status error\r\n", SLE_KEYBOARD_DONGLE_LOG);
         osal_printk("%s pair complete status:%x\r\n", SLE_KEYBOARD_DONGLE_LOG, status);
     }
@@ -164,18 +165,20 @@ void  sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_a
 static void sle_keyboard_client_sample_connect_cbk_register(void)
 {
     g_sle_keyboard_connect_cbk.connect_state_changed_cb = sle_keyboard_client_sample_connect_state_changed_cbk;
-    g_sle_keyboard_connect_cbk.pair_complete_cb =  sle_keyboard_client_sample_pair_complete_cbk;
+    g_sle_keyboard_connect_cbk.pair_complete_cb = sle_keyboard_client_sample_pair_complete_cbk;
     sle_connection_register_callbacks(&g_sle_keyboard_connect_cbk);
 }
 
-static void sle_keyboard_client_sample_exchange_info_cbk(uint8_t client_id, uint16_t conn_id,
-                                                         ssap_exchange_info_t *param, errcode_t status)
+static void sle_keyboard_client_sample_exchange_info_cbk(uint8_t client_id,
+                                                         uint16_t conn_id,
+                                                         ssap_exchange_info_t *param,
+                                                         errcode_t status)
 {
-    osal_printk("%s exchange_info_cbk,pair complete client id:%d status:%d\r\n", SLE_KEYBOARD_DONGLE_LOG,
-                client_id, status);
-    osal_printk("%s exchange mtu, mtu size: %d, version: %d.\r\n", SLE_KEYBOARD_DONGLE_LOG,
-                param->mtu_size, param->version);
-    ssapc_find_structure_param_t find_param = { 0 };
+    osal_printk("%s exchange_info_cbk,pair complete client id:%d status:%d\r\n", SLE_KEYBOARD_DONGLE_LOG, client_id,
+                status);
+    osal_printk("%s exchange mtu, mtu size: %d, version: %d.\r\n", SLE_KEYBOARD_DONGLE_LOG, param->mtu_size,
+                param->version);
+    ssapc_find_structure_param_t find_param = {0};
     find_param.type = SSAP_FIND_TYPE_PROPERTY;
     find_param.start_hdl = 1;
     find_param.end_hdl = 0xFFFF;
@@ -183,11 +186,13 @@ static void sle_keyboard_client_sample_exchange_info_cbk(uint8_t client_id, uint
     osal_mdelay(SLE_KEYBOARD_TASK_DELAY_MS);
 }
 
-static void sle_keyboard_client_sample_find_structure_cbk(uint8_t client_id, uint16_t conn_id,
-                                                          ssapc_find_service_result_t *service, errcode_t status)
+static void sle_keyboard_client_sample_find_structure_cbk(uint8_t client_id,
+                                                          uint16_t conn_id,
+                                                          ssapc_find_service_result_t *service,
+                                                          errcode_t status)
 {
-    osal_printk("%s find structure cbk client: %d conn_id:%d status: %d \r\n", SLE_KEYBOARD_DONGLE_LOG,
-                client_id, conn_id, status);
+    osal_printk("%s find structure cbk client: %d conn_id:%d status: %d \r\n", SLE_KEYBOARD_DONGLE_LOG, client_id,
+                conn_id, status);
     osal_printk("%s find structure start_hdl:[0x%02x], end_hdl:[0x%02x], uuid len:%d\r\n", SLE_KEYBOARD_DONGLE_LOG,
                 service->start_hdl, service->end_hdl, service->uuid.len);
     g_sle_keyboard_find_service_result.start_hdl = service->start_hdl;
@@ -195,18 +200,22 @@ static void sle_keyboard_client_sample_find_structure_cbk(uint8_t client_id, uin
     memcpy_s(&g_sle_keyboard_find_service_result.uuid, sizeof(sle_uuid_t), &service->uuid, sizeof(sle_uuid_t));
 }
 
-static void sle_keyboard_client_sample_find_property_cbk(uint8_t client_id, uint16_t conn_id,
-                                                         ssapc_find_property_result_t *property, errcode_t status)
+static void sle_keyboard_client_sample_find_property_cbk(uint8_t client_id,
+                                                         uint16_t conn_id,
+                                                         ssapc_find_property_result_t *property,
+                                                         errcode_t status)
 {
-    osal_printk("%s sle_keyboard_client_sample_find_property_cbk, client id: %d, conn id: %d, operate ind: %d, "
-                "descriptors count: %d status:%d property->handle %d\r\n", SLE_KEYBOARD_DONGLE_LOG,
-                client_id, conn_id, property->operate_indication,
-                property->descriptors_count, status, property->handle);
+    osal_printk(
+        "%s sle_keyboard_client_sample_find_property_cbk, client id: %d, conn id: %d, operate ind: %d, "
+        "descriptors count: %d status:%d property->handle %d\r\n",
+        SLE_KEYBOARD_DONGLE_LOG, client_id, conn_id, property->operate_indication, property->descriptors_count, status,
+        property->handle);
     g_sle_keyboard_send_param.handle = property->handle;
     g_sle_keyboard_send_param.type = SSAP_PROPERTY_TYPE_VALUE;
 }
 
-static void sle_keyboard_client_sample_find_structure_cmp_cbk(uint8_t client_id, uint16_t conn_id,
+static void sle_keyboard_client_sample_find_structure_cmp_cbk(uint8_t client_id,
+                                                              uint16_t conn_id,
                                                               ssapc_find_structure_result_t *structure_result,
                                                               errcode_t status)
 {
@@ -215,8 +224,10 @@ static void sle_keyboard_client_sample_find_structure_cmp_cbk(uint8_t client_id,
                 SLE_KEYBOARD_DONGLE_LOG, client_id, status, structure_result->type, structure_result->uuid.len);
 }
 
-static void sle_keyboard_client_sample_write_cfm_cb(uint8_t client_id, uint16_t conn_id,
-                                                    ssapc_write_result_t *write_result, errcode_t status)
+static void sle_keyboard_client_sample_write_cfm_cb(uint8_t client_id,
+                                                    uint16_t conn_id,
+                                                    ssapc_write_result_t *write_result,
+                                                    errcode_t status)
 {
     osal_printk("%s sle_keyboard_client_sample_write_cb, conn_id:%d client id:%d status:%d handle:%02x type:%02x\r\n",
                 SLE_KEYBOARD_DONGLE_LOG, conn_id, client_id, status, write_result->handle, write_result->type);
