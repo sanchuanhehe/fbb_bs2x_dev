@@ -47,7 +47,7 @@ jobs:
         body: |
           This release was automatically generated from tag ${{ github.ref_name }}.
         draft: false
-        prerelease: false
+        prerelease: ${{ contains(github.ref_name, 'rc') }}
 
     - name: Prepare Compiled Artifact
       run: |
