@@ -17,6 +17,7 @@
 #include "sle_connection_manager.h"
 #include "sle_ssap_client.h"
 #include "sle_keyboard_client.h"
+#include "sle_device_manager.h"
 
 #define SLE_MTU_SIZE_DEFAULT                        300
 #define SLE_SEEK_INTERVAL_DEFAULT                   100

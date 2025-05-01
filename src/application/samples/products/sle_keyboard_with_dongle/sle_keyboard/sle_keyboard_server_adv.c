@@ -201,7 +201,7 @@ static void sle_announce_terminal_cbk(uint32_t announce_id)
     sample_print("%s sle announce terminal callback id:%02x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id);
 }
 
-static void seek_enable_cb(errcode_t status)
+static void sle_enable_cb(errcode_t status)
 {
     sample_print("%s sle enable callback status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, status);
 }
@@ -213,7 +213,7 @@ errcode_t sle_keyboard_announce_register_cbks(void)
     seek_cbks.announce_enable_cb = sle_announce_enable_cbk;
     seek_cbks.announce_disable_cb = sle_announce_disable_cbk;
     seek_cbks.announce_terminal_cb = sle_announce_terminal_cbk;
-    seek_cbks.seek_enable_cb = seek_enable_cb;
+    seek_cbks.sle_enable_cb = sle_enable_cb;
     ret = sle_announce_seek_register_callbacks(&seek_cbks);
     if (ret != ERRCODE_SLE_SUCCESS) {
         sample_print("%s sle_keyboard_announce_register_cbks,register_callbacks fail :%x\r\n", SLE_KEYBOARD_SERVER_LOG,
