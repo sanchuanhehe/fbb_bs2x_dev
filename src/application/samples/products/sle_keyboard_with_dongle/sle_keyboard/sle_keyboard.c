@@ -42,16 +42,9 @@
 #define SLE_KEYBOARD_SERVER_QUEUE_DELAY 0xFFFFFFFF
 #define SLE_KEYBOARD_SERVER_LOG "[sle keyboard server]"
 
-#if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
 #include "keyboardconfig.h"
-static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL] = KEYSCAN_MAP;
-#else
-static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL] = {
-    {0x04, 0x05},
-    {0x06, 0x07},
-    {0x08, 0x09},
-};
-#endif /* CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE */
+static uint8_t g_key_map[CONFIG_KEYSCAN_ENABLE_ROW][CONFIG_KEYSCAN_ENABLE_COL] = KEYSCAN_MAP;
+
 typedef struct usb_hid_keyboard_report {
     uint8_t kind;
     uint8_t special_key;                         /*!< 8bit special key(Lctrl Lshift Lalt Lgui Rctrl Rshift Ralt Rgui) */
@@ -220,13 +213,7 @@ static void *sle_keyboard_task(const char *arg)
     keyscan_porting_config_pins();
 #endif
     // 3.keyscan init
-    uapi_set_keyscan_value_map((uint8_t **)g_key_map, KEYSCAN_MAX_ROW, KEYSCAN_MAX_COL);
-#if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
-    keyscan_porting_type_sel(CUSTOME_KEYS_TYPE);
-#else
-#error "Please define CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE"
-    keyscan_porting_type_sel(SIX_KEYS_TYPE);
-#endif
+    uapi_set_keyscan_value_map((uint8_t **)g_key_map, CONFIG_KEYSCAN_ENABLE_ROW, CONFIG_KEYSCAN_ENABLE_COL);
     uapi_keyscan_init(EVERY_ROW_PULSE_40_US, HAL_KEYSCAN_MODE_0, KEYSCAN_INT_VALUE_RDY);
     osDelay(SLE_KEYBOARD_TASK_DURATION_MS);
     uapi_keyscan_register_callback(sle_keyboard_keyscan_callback);

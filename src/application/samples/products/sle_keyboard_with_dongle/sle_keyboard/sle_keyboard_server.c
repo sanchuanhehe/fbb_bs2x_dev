@@ -18,6 +18,7 @@
 #include "sle_device_discovery.h"
 #include "sle_keyboard_server_adv.h"
 #include "sle_keyboard_server.h"
+#include "sle_device_manager.h"
 
 #define OCTET_BIT_LEN 8
 #define UUID_LEN_2 2
