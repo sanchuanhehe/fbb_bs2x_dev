@@ -36,11 +36,6 @@ jobs:
         cd src
         python build.py -c -ninja
 
-    - name: Prepare Release Artifacts
-      run: |
-        mkdir -p release-artifacts
-        cp -r src/output/bs21e/fwpkg/standard-bs21e-1100e release-artifacts/
-
     - name: Create GitHub Release
       id: create-release
       uses: actions/create-release@v1
@@ -58,6 +53,6 @@ jobs:
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: release-artifacts/standard-bs21e-1100e
+        asset_path: src/output/bs21e/fwpkg/standard-bs21e-1100e
         asset_name: standard-bs21e-1100e
         asset_content_type: application/octet-stream
