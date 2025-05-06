@@ -78,7 +78,7 @@ void app_printf_err(void)
             osal_printk("recv OK\r\n");
         } else {
             for (uint32_t j = 0; j < I2S_RING_BUFFER_NUMBER; j++) {
-                for (uint32_t i = 0; i < CONFIG_I2S_TRANSFER_LEN_OF_DMA_LLI; i += 2) {
+                for (uint32_t i = 0; i < CONFIG_I2S_TRANSFER_LEN_OF_DMA_LLI; i += 2) {  // 2 bytes per word
                     osal_printk("%d, %d  ~  %x\r\n", j, i, g_i2s_dma_data[j][i]);
                 }
             }

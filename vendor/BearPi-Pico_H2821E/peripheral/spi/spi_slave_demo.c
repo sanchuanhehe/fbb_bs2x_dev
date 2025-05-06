@@ -29,17 +29,17 @@
 static void app_spi_init_pin(void)
 {
 
-    if (CONFIG_SPI_SLAVE_BUS_ID == 0) {
+    if (CONFIG_SPI_SLAVE_BUS_ID == 0) {    //SPI0
         uapi_pin_set_mode(CONFIG_SPI_DI_SLAVE_PIN, HAL_PIO_SPI0_RXD);
         uapi_pin_set_mode(CONFIG_SPI_DO_SLAVE_PIN, HAL_PIO_SPI0_TXD);
         uapi_pin_set_mode(CONFIG_SPI_CLK_SLAVE_PIN, HAL_PIO_SPI0_SCLK);
         uapi_pin_set_mode(CONFIG_SPI_CS_SLAVE_PIN, HAL_PIO_SPI0_CS0);      
-    }else if (CONFIG_SPI_SLAVE_BUS_ID == 1) {
+    }else if (CONFIG_SPI_SLAVE_BUS_ID == 1) {    //SPI1
         uapi_pin_set_mode(CONFIG_SPI_DI_SLAVE_PIN, HAL_PIO_SPI1_RXD);
         uapi_pin_set_mode(CONFIG_SPI_DO_SLAVE_PIN, HAL_PIO_SPI1_TXD);
         uapi_pin_set_mode(CONFIG_SPI_CLK_SLAVE_PIN, HAL_PIO_SPI1_CLK);
         uapi_pin_set_mode(CONFIG_SPI_CS_SLAVE_PIN, HAL_PIO_SPI1_CS0);     
-    }else if (CONFIG_SPI_SLAVE_BUS_ID == 2) {
+    }else if (CONFIG_SPI_SLAVE_BUS_ID == 2) {    //SPI2
         uapi_pin_set_mode(CONFIG_SPI_DI_SLAVE_PIN, HAL_PIO_SPI2_RXD);
         uapi_pin_set_mode(CONFIG_SPI_DO_SLAVE_PIN, HAL_PIO_SPI2_TXD);
         uapi_pin_set_mode(CONFIG_SPI_CLK_SLAVE_PIN, HAL_PIO_SPI2_CLK);

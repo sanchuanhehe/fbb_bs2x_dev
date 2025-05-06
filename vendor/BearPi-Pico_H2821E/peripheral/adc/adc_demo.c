@@ -57,7 +57,7 @@ static void *adc_task(const char *arg)
         int gadc_value = 0;
         gadc_value =  uapi_adc_auto_sample(GADC_CHANNEL_0);
         osal_printk("gadc: %dmv\n", (gadc_value * ADC_TICK2VOL_REF_VOLTAGE_MV) >> GAFE_SAMPLE_VALUE_SIGN_BIT);
-        osDelay(1000);
+        osDelay(1000);  //1s
     }
     return NULL;
 }

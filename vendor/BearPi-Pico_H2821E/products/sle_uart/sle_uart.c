@@ -40,13 +40,13 @@ static uart_buffer_config_t g_app_uart_buffer_config = {
 
 static void uart_init_pin(void)
 {
-    if (CONFIG_SLE_UART_BUS == 0) {
+    if (CONFIG_SLE_UART_BUS == 0) {     //串口0
         uapi_pin_set_mode(CONFIG_UART_TXD_PIN, HAL_PIO_UART_L0_TXD);
         uapi_pin_set_mode(CONFIG_UART_RXD_PIN, HAL_PIO_UART_L0_RXD);       
-    }else if (CONFIG_SLE_UART_BUS == 1) {
+    }else if (CONFIG_SLE_UART_BUS == 1) {   //串口1
         uapi_pin_set_mode(CONFIG_UART_TXD_PIN, HAL_PIO_UART_H0_TXD);
         uapi_pin_set_mode(CONFIG_UART_RXD_PIN, HAL_PIO_UART_H0_RXD);       
-    }else if (CONFIG_SLE_UART_BUS == 2) {
+    }else if (CONFIG_SLE_UART_BUS == 2) {   //串口2
         uapi_pin_set_mode(CONFIG_UART_TXD_PIN, HAL_PIO_UART_L1_TXD);
         uapi_pin_set_mode(CONFIG_UART_RXD_PIN, HAL_PIO_UART_L1_RXD);       
     }
