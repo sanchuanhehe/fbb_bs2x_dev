@@ -37,11 +37,11 @@ static void *pwm_task(const char *arg)
 
     uapi_tcxo_delay_ms((uint32_t)TEST_TCXO_DELAY_1000MS);
 
-    uint8_t channel = PWM_CHANNEL;
-    uapi_pwm_set_group(PWM_GROUP_ID, &channel, 1);
+    uint8_t channel = PWM_CHANNEL;    
     uapi_pwm_open(PWM_CHANNEL, &cfg_no_repeat);
-    uapi_pwm_config_preload(PWM_GROUP_ID, channel, &cfg_no_repeat);
-    uapi_pwm_start(PWM_GROUP_ID);
+    uapi_pwm_set_group(PWM_GROUP_ID, &channel, 1);
+    uapi_pwm_start_group(PWM_GROUP_ID);
+    uapi_pwm_start(PWM_CHANNEL);
 
 
     uapi_tcxo_delay_ms((uint32_t)TEST_TCXO_DELAY_1000MS);
