@@ -7,6 +7,7 @@
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
+  "postCreateCommand": "mkdir -p /workspace/src/.vscode && echo '{\"C_Cpp.intelliSenseEngine\": \"disabled\"}' > /workspace/src/.vscode/settings.json",
   "customizations": {
     "vscode": {
       "extensions": [
