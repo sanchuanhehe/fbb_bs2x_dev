@@ -46,3 +46,5 @@ RUN pip3 install pyyaml
 # 设置环境变量export LC_ALL=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
+RUN echo "export LC_ALL=C.UTF-8" >> ~/.bashrc
+RUN echo "{"C_Cpp.intelliSenseEngine": "disabled"}" > /workspace/src/.vscode/settings.json
