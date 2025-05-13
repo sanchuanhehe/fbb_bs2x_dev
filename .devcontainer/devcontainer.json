@@ -3,7 +3,6 @@
   "context": "..",
   "dockerFile": "Dockerfile",
   "workspaceFolder": "/workspace/src",
-  "remoteUser":"vscode",
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
