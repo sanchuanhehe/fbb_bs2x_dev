@@ -34,14 +34,8 @@ RUN CLANGD_VERSION=18.1.3 && \
     cp -r clangd_$CLANGD_VERSION/lib/* /usr/local/lib/ && \
     rm -rf clangd-linux-$CLANGD_VERSION.zip clangd_$CLANGD_VERSION
 
-# 安装kconfiglib，版本大于14.1.0
-RUN pip3 install "kconfiglib>=14.1.0"
-
-# 安装其他Python依赖包，版本大于2.21
-RUN pip3 install "pycparser>=2.21"
-
-# 安装PYYAML
-RUN pip3 install pyyaml
+# 安装 Python 依赖
+RUN pip3 install "pycparser>=2.21" pyyaml "kconfiglib>=14.1.0" --break-system-packages
 
 # 设置环境变量export LC_ALL=C.UTF-8
 ENV LC_ALL=C.UTF-8
