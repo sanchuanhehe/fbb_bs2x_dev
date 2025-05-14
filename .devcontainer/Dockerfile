@@ -46,3 +46,5 @@ RUN pip3 install pyyaml
 # 设置环境变量export LC_ALL=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
+# 设置passwordless sudo
+RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

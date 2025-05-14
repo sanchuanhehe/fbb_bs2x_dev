@@ -3,7 +3,7 @@
   "context": "..",
   "dockerFile": "Dockerfile",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/src",
-  "remoteUser": "root",
+  "remoteUser": "ubuntu",
   "customizations": {
     "vscode": {
       "extensions": [
