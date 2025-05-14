@@ -2,11 +2,8 @@
   "name": "bs2xdev",
   "context": "..",
   "dockerFile": "Dockerfile",
-  "workspaceFolder": "/workspaces/fbb_bs2x/src",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/src",
   "remoteUser": "root",
-  "mounts": [
-    "source=${localWorkspaceFolder},target=/workspaces/fbb_bs2x,type=bind,consistency=cached"
-  ],
   "customizations": {
     "vscode": {
       "extensions": [
