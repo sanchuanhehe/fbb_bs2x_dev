@@ -1,5 +1,5 @@
 # 使用 Ubuntu 20.04 作为基础镜像
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 # 设置非交互模式以避免时间区选择等提示
 ENV DEBIAN_FRONTEND=noninteractive
@@ -46,4 +46,5 @@ RUN pip3 install pyyaml
 # 设置环境变量export LC_ALL=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-RUN echo "export LC_ALL=C.UTF-8" >> ~/.bashrc
+# 设置passwordless sudo
+RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
