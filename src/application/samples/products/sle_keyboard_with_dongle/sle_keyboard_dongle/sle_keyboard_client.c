@@ -18,6 +18,7 @@
 #include "sle_ssap_client.h"
 #include "sle_keyboard_client.h"
 #include "sle_device_manager.h"
+#include "bts_device_manager.h"
 
 #define SLE_MTU_SIZE_DEFAULT 300
 #define SLE_SEEK_INTERVAL_DEFAULT 100
@@ -37,6 +38,7 @@
 
 static ssapc_find_service_result_t g_sle_keyboard_find_service_result = {0};
 static sle_announce_seek_callbacks_t g_sle_keyboard_seek_cbk = {0};
+static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
 static sle_power_on_callback g_sle_keyboard_power_on_callback = {0};
 static sle_connection_callbacks_t g_sle_keyboard_connect_cbk = {0};
 static ssapc_callbacks_t g_sle_keyboard_ssapc_cbk = {0};
@@ -69,7 +71,7 @@ void sle_keyboard_start_scan(void)
     osal_mdelay(SLE_KEYBOARD_TASK_DELAY_MS);
 }
 
-static void sle_keyboard_client_sample_sle_enable_cbk(errcode_t status)
+static void sle_keyboard_client_sample_sle_enable_cbk(uint8_t status)
 {
     if (status != 0) {
         osal_printk("%s sle_keyboard_client_sample_sle_enable_cbk,status error\r\n", SLE_KEYBOARD_DONGLE_LOG);
@@ -77,6 +79,12 @@ static void sle_keyboard_client_sample_sle_enable_cbk(errcode_t status)
         osal_printk("%s enter callback of sle enable,start scan!\r\n", SLE_KEYBOARD_DONGLE_LOG);
         sle_keyboard_start_scan();
     }
+}
+
+static void sle_keyboard_client_sample_sle_power_on_cbk(uint8_t status)
+{
+    osal_printk("sle power on: %d.\r\n", status);
+    enable_sle();
 }
 
 static void sle_keyboard_client_sample_seek_enable_cbk(errcode_t status)
@@ -113,11 +121,13 @@ static void sle_keyboard_client_sample_seek_disable_cbk(errcode_t status)
 
 static void sle_keyboard_client_sample_seek_cbk_register(void)
 {
-    g_sle_keyboard_seek_cbk.sle_enable_cb = sle_keyboard_client_sample_sle_enable_cbk;
+    g_sle_dev_mgr_cbk.sle_enable_cb = sle_keyboard_client_sample_sle_enable_cbk;
+    g_sle_dev_mgr_cbk.sle_power_on_cb = sle_keyboard_client_sample_sle_power_on_cbk;
     g_sle_keyboard_seek_cbk.seek_enable_cb = sle_keyboard_client_sample_seek_enable_cbk;
     g_sle_keyboard_seek_cbk.seek_result_cb = sle_keyboard_client_sample_seek_result_info_cbk;
     g_sle_keyboard_seek_cbk.seek_disable_cb = sle_keyboard_client_sample_seek_disable_cbk;
     sle_announce_seek_register_callbacks(&g_sle_keyboard_seek_cbk);
+    sle_dev_manager_register_callbacks(&g_sle_dev_mgr_cbk);
 }
 
 static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_id,
