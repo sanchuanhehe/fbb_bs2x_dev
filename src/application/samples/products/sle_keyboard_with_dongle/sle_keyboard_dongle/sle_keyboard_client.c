@@ -39,7 +39,6 @@
 static ssapc_find_service_result_t g_sle_keyboard_find_service_result = {0};
 static sle_announce_seek_callbacks_t g_sle_keyboard_seek_cbk = {0};
 static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
-static sle_power_on_callback g_sle_keyboard_power_on_callback = {0};
 static sle_connection_callbacks_t g_sle_keyboard_connect_cbk = {0};
 static ssapc_callbacks_t g_sle_keyboard_ssapc_cbk = {0};
 static sle_addr_t g_sle_keyboard_remote_addr = {0};
@@ -256,27 +255,27 @@ static void sle_keyboard_client_sample_ssapc_cbk_register(ssapc_notification_cal
     ssapc_register_callbacks(&g_sle_keyboard_ssapc_cbk);
 }
 
-void ble_enable_cb(errcode_t status)
-{
-    osal_printk("%s enable status: %d\n", SLE_KEYBOARD_DONGLE_LOG, status);
-}
+// void ble_enable_cb(errcode_t status)
+// {
+//     osal_printk("%s enable status: %d\n", SLE_KEYBOARD_DONGLE_LOG, status);
+// }
 
-void bt_core_enable_cbk_register(void)
-{
-    errcode_t ret;
-    gap_ble_callbacks_t gap_cb = {0};
-    gap_cb.ble_enable_cb = ble_enable_cb;
-    ret = gap_ble_register_callbacks(&gap_cb);
-    if (ret != ERRCODE_BT_SUCCESS) {
-        osal_printk("%s register ble_enable_cb failed\r\n", SLE_KEYBOARD_DONGLE_LOG);
-    }
-}
+// void bt_core_enable_cbk_register(void)
+// {
+//     errcode_t ret;
+//     gap_ble_callbacks_t gap_cb = {0};
+//     gap_cb.ble_enable_cb = ble_enable_cb;
+//     ret = gap_ble_register_callbacks(&gap_cb);
+//     if (ret != ERRCODE_BT_SUCCESS) {
+//         osal_printk("%s register ble_enable_cb failed\r\n", SLE_KEYBOARD_DONGLE_LOG);
+//     }
+// }
 
 void sle_keyboard_client_init(ssapc_notification_callback notification_cb, ssapc_indication_callback indication_cb)
 {
     osal_mdelay(SLE_KEYBOARD_WAIT_SLE_ENABLE_MS);
     sle_remove_all_pairs();
-    bt_core_enable_cbk_register();
+    // bt_core_enable_cbk_register();
     osal_mdelay(SLE_KEYBOARD_WAIT_SLE_CORE_READY_MS);
     enable_sle();
     sle_keyboard_client_sample_seek_cbk_register();
