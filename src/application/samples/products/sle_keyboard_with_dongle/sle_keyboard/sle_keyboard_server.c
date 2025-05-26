@@ -1,10 +1,10 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: SLE KEYBOARD Server Source. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-07-29, Create file. \n
+ * @file sle_keyboard_server.c
+ * @brief SLE keyboard server source implementation / SLE键盘服务器源码实现
+ * @author @CompanyNameTag
+ * @date 2023-07-29
+ * @version 1.0
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
  */
 
 #include "securec.h"
@@ -20,39 +20,57 @@
 #include "sle_keyboard_server.h"
 #include "sle_device_manager.h"
 
+/** @brief Octet bit length / 八位字节长度 */
 #define OCTET_BIT_LEN 8
+/** @brief UUID length 2 bytes / UUID长度2字节 */
 #define UUID_LEN_2 2
+/** @brief UUID index position / UUID索引位置 */
 #define UUID_INDEX 14
+/** @brief Bluetooth index 4 / 蓝牙索引4 */
 #define BT_INDEX_4 4
+/** @brief Bluetooth index 0 / 蓝牙索引0 */
 #define BT_INDEX_0 0
+/** @brief 16-bit UUID length / 16位UUID长度 */
 #define UUID_16BIT_LEN 2
+/** @brief 128-bit UUID length / 128位UUID长度 */
 #define UUID_128BIT_LEN 16
 
-/* sle server app uuid */
+/** @brief SLE server application UUID / SLE服务器应用UUID */
 static uint8_t g_sle_uuid_app_uuid[UUID_LEN_2] = {0x12, 0x34};
-/* server notify property uuid */
+/** @brief Server notify property value / 服务器通知属性值 */
 static uint8_t g_sle_property_value[OCTET_BIT_LEN] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-/* sle connect acb handle */
+/** @brief SLE connection ACB handle / SLE连接ACB句柄 */
 static uint16_t g_sle_conn_handle = 0;
-/* sle server handle */
+/** @brief SLE server ID / SLE服务器ID */
 static uint8_t g_server_id = 0;
-/* sle service handle */
+/** @brief SLE service handle / SLE服务句柄 */
 static uint16_t g_service_handle = 0;
-/* sle ntf property handle */
+/** @brief SLE notification property handle / SLE通知属性句柄 */
 static uint16_t g_property_handle = 0;
-/* sle pair acb handle */
+/** @brief SLE pair ACB handle / SLE配对ACB句柄 */
 static uint16_t g_sle_pair_handle;
 
+/** @brief SLE keyboard server message queue / SLE键盘服务器消息队列 */
 static sle_keyboard_server_msg_queue g_sle_keyboard_server_msg_queue = NULL;
+/** @brief SLE keyboard base UUID / SLE键盘基础UUID */
 static uint8_t g_sle_keyboard_base[] = {0x37, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA,
                                         0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+/**
+ * @brief Encode 2-byte data in little endian format / 以小端格式编码2字节数据
+ * @param[out] _ptr Pointer to buffer / 缓冲区指针
+ * @param[in] data Data to encode / 要编码的数据
+ */
 static void encode2byte_little(uint8_t *_ptr, uint16_t data)
 {
     *(uint8_t *)((_ptr) + 1) = (uint8_t)((data) >> 0x8);
     *(uint8_t *)(_ptr) = (uint8_t)(data);
 }
 
+/**
+ * @brief Set base UUID / 设置基础UUID
+ * @param[out] out Output UUID structure / 输出UUID结构
+ */
 static void sle_uuid_set_base(sle_uuid_t *out)
 {
     if (memcpy_s(out->uuid, SLE_UUID_LEN, g_sle_keyboard_base, SLE_UUID_LEN) != EOK) {
@@ -63,6 +81,11 @@ static void sle_uuid_set_base(sle_uuid_t *out)
     out->len = UUID_LEN_2;
 }
 
+/**
+ * @brief Set 2-byte UUID / 设置2字节UUID
+ * @param[in] u2 2-byte UUID value / 2字节UUID值
+ * @param[out] out Output UUID structure / 输出UUID结构
+ */
 static void sle_uuid_setu2(uint16_t u2, sle_uuid_t *out)
 {
     sle_uuid_set_base(out);
@@ -70,6 +93,13 @@ static void sle_uuid_setu2(uint16_t u2, sle_uuid_t *out)
     encode2byte_little(&out->uuid[UUID_INDEX], u2);
 }
 
+/**
+ * @brief MTU changed callback function / MTU改变回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] mtu_size MTU size information / MTU大小信息
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id, ssap_exchange_info_t *mtu_size, errcode_t status)
 {
     sample_print("%s ssaps ssaps_mtu_changed_cbk callback server_id:%x, conn_id:%x, mtu_size:%x, status:%x\r\n",
@@ -79,17 +109,40 @@ static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id, ssap_exch
     }
 }
 
+/**
+ * @brief Start service callback function / 启动服务回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] handle Service handle / 服务句柄
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_start_service_cbk(uint8_t server_id, uint16_t handle, errcode_t status)
 {
     sample_print("%s start service cbk callback server_id:%d, handle:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
                  server_id, handle, status);
 }
+
+/**
+ * @brief Add service callback function / 添加服务回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] uuid Service UUID / 服务UUID
+ * @param[in] handle Service handle / 服务句柄
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_add_service_cbk(uint8_t server_id, sle_uuid_t *uuid, uint16_t handle, errcode_t status)
 {
     unused(uuid);
     sample_print("%s add service cbk callback server_id:%x, handle:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
                  server_id, handle, status);
 }
+
+/**
+ * @brief Add property callback function / 添加属性回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] uuid Property UUID / 属性UUID
+ * @param[in] service_handle Service handle / 服务句柄
+ * @param[in] handle Property handle / 属性句柄
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_add_property_cbk(uint8_t server_id,
                                    sle_uuid_t *uuid,
                                    uint16_t service_handle,
@@ -100,6 +153,15 @@ static void ssaps_add_property_cbk(uint8_t server_id,
     sample_print("%s add property cbk callback server_id:%x, service_handle:%x,handle:%x, status:%x\r\n",
                  SLE_KEYBOARD_SERVER_LOG, server_id, service_handle, handle, status);
 }
+
+/**
+ * @brief Add descriptor callback function / 添加描述符回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] uuid Descriptor UUID / 描述符UUID
+ * @param[in] service_handle Service handle / 服务句柄
+ * @param[in] property_handle Property handle / 属性句柄
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_add_descriptor_cbk(uint8_t server_id,
                                      sle_uuid_t *uuid,
                                      uint16_t service_handle,
@@ -112,11 +174,26 @@ static void ssaps_add_descriptor_cbk(uint8_t server_id,
                  status:%x\r\n",
         SLE_KEYBOARD_SERVER_LOG, server_id, service_handle, property_handle, status);
 }
+
+/**
+ * @brief Delete all services callback function / 删除所有服务回调函数
+ * @param[in] server_id Server ID / 服务器ID
+ * @param[in] status Operation status / 操作状态
+ */
 static void ssaps_delete_all_service_cbk(uint8_t server_id, errcode_t status)
 {
     sample_print("%s delete all service callback server_id:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, server_id,
                  status);
 }
+
+/**
+ * @brief Register SSAPS callbacks / 注册SSAPS回调函数
+ * @param[in] ssaps_read_callback Read request callback / 读取请求回调
+ * @param[in] ssaps_write_callback Write request callback / 写入请求回调
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 static errcode_t sle_ssaps_register_cbks(ssaps_read_request_callback ssaps_read_callback,
                                          ssaps_write_request_callback ssaps_write_callback)
 {
@@ -138,6 +215,12 @@ static errcode_t sle_ssaps_register_cbks(ssaps_read_request_callback ssaps_read_
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Add UUID server service / 添加UUID服务器服务
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval ERRCODE_SLE_FAIL Failure / 失败
+ */
 static errcode_t sle_uuid_server_service_add(void)
 {
     errcode_t ret;
@@ -151,6 +234,12 @@ static errcode_t sle_uuid_server_service_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Add UUID server property / 添加UUID服务器属性
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval ERRCODE_SLE_FAIL Failure / 失败
+ */
 static errcode_t sle_uuid_server_property_add(void)
 {
     errcode_t ret;
@@ -201,6 +290,12 @@ static errcode_t sle_uuid_server_property_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Add SLE keyboard server / 添加SLE键盘服务器
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval ERRCODE_SLE_FAIL Failure / 失败
+ */
 static errcode_t sle_keyboard_server_add(void)
 {
     errcode_t ret;
@@ -232,7 +327,14 @@ static errcode_t sle_keyboard_server_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
-/* device通过uuid向host发送数据：report */
+/**
+ * @brief Send report by UUID / 通过UUID发送报告
+ * @param[in] data Data to send / 要发送的数据
+ * @param[in] len Data length / 数据长度
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval ERRCODE_SLE_FAIL Failure / 失败
+ */
 errcode_t sle_keyboard_server_send_report_by_uuid(const uint8_t *data, uint8_t len)
 {
     errcode_t ret;
@@ -262,7 +364,15 @@ errcode_t sle_keyboard_server_send_report_by_uuid(const uint8_t *data, uint8_t l
     osal_vfree(param.value);
     return ERRCODE_SLE_SUCCESS;
 }
-/* device通过handle向host发送数据：report */
+
+/**
+ * @brief Send report by handle / 通过句柄发送报告
+ * @param[in] data Data to send / 要发送的数据
+ * @param[in] len Data length / 数据长度
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval ERRCODE_SLE_FAIL Failure / 失败
+ */
 errcode_t sle_keyboard_server_send_report_by_handle(const uint8_t *data, uint8_t len)
 {
     ssaps_ntf_ind_t param = {0};
@@ -291,6 +401,14 @@ errcode_t sle_keyboard_server_send_report_by_handle(const uint8_t *data, uint8_t
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Connection state changed callback / 连接状态改变回调
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] addr Device address / 设备地址
+ * @param[in] conn_state Connection state / 连接状态
+ * @param[in] pair_state Pair state / 配对状态
+ * @param[in] disc_reason Disconnect reason / 断开连接原因
+ */
 static void sle_connect_state_changed_cbk(uint16_t conn_id,
                                           const sle_addr_t *addr,
                                           sle_acb_state_t conn_state,
@@ -315,6 +433,12 @@ static void sle_connect_state_changed_cbk(uint16_t conn_id,
     }
 }
 
+/**
+ * @brief Pair complete callback / 配对完成回调
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] addr Device address / 设备地址
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
 {
     sample_print("%s pair complete conn_id:%02x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, conn_id, status);
@@ -323,6 +447,12 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
     g_sle_pair_handle = 1;
 }
 
+/**
+ * @brief Register connection callbacks / 注册连接回调函数
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 static errcode_t sle_conn_register_cbks(void)
 {
     errcode_t ret;
@@ -338,12 +468,25 @@ static errcode_t sle_conn_register_cbks(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Check if keyboard client is connected / 检查键盘客户端是否已连接
+ * @return Connection status / 连接状态
+ * @retval 0 Not connected / 未连接
+ * @retval 1 Connected / 已连接
+ */
 uint16_t sle_keyboard_client_is_connected(void)
 {
     return g_sle_pair_handle;
 }
 
-/* 初始化uuid server */
+/**
+ * @brief Initialize SLE keyboard server / 初始化SLE键盘服务器
+ * @param[in] ssaps_read_callback Read request callback / 读取请求回调
+ * @param[in] ssaps_write_callback Write request callback / 写入请求回调
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 errcode_t sle_keyboard_server_init(ssaps_read_request_callback ssaps_read_callback,
                                    ssaps_write_request_callback ssaps_write_callback)
 {
@@ -385,6 +528,10 @@ errcode_t sle_keyboard_server_init(ssaps_read_request_callback ssaps_read_callba
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Register message queue for SLE keyboard server / 为SLE键盘服务器注册消息队列
+ * @param[in] sle_keyboard_server_msg Message queue callback / 消息队列回调
+ */
 void sle_keyboard_server_register_msg(sle_keyboard_server_msg_queue sle_keyboard_server_msg)
 {
     g_sle_keyboard_server_msg_queue = sle_keyboard_server_msg;
