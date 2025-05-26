@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/output/bs21e/acore/standard-bs21e-1100e"
+    ]
+}
