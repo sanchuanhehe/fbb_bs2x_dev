@@ -1,10 +1,10 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: sle adv config for sle keyboard server. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-07-29, Create file. \n
+ * @file sle_keyboard_server_adv.c
+ * @brief SLE advertisement configuration for SLE keyboard server / SLE键盘服务器广播配置
+ * @author @CompanyNameTag
+ * @date 2023-07-29
+ * @version 1.0
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
  */
 #include "securec.h"
 #include "errcode.h"
@@ -16,30 +16,37 @@
 #include "sle_keyboard_server.h"
 #include "sle_keyboard_server_adv.h"
 #include "sle_device_manager.h"
-/* sle device name */
+
+/** @brief Maximum length of SLE device name / SLE设备名称最大长度 */
 #define NAME_MAX_LENGTH 32
-/* 连接调度间隔12.5ms，单位125us */
+/** @brief Connection interval minimum 12.5ms, unit 125us / 连接调度间隔最小值12.5ms，单位125us */
 #define SLE_CONN_INTV_MIN_DEFAULT 0x64
-/* 连接调度间隔12.5ms，单位125us */
+/** @brief Connection interval maximum 12.5ms, unit 125us / 连接调度间隔最大值12.5ms，单位125us */
 #define SLE_CONN_INTV_MAX_DEFAULT 0x64
-/* 连接调度间隔25ms，单位125us */
+/** @brief Advertisement interval minimum 25ms, unit 125us / 广播间隔最小值25ms，单位125us */
 #define SLE_ADV_INTERVAL_MIN_DEFAULT 0xC8
-/* 连接调度间隔25ms，单位125us */
+/** @brief Advertisement interval maximum 25ms, unit 125us / 广播间隔最大值25ms，单位125us */
 #define SLE_ADV_INTERVAL_MAX_DEFAULT 0xC8
-/* 超时时间5000ms，单位10ms */
+/** @brief Connection supervision timeout 5000ms, unit 10ms / 连接监管超时时间5000ms，单位10ms */
 #define SLE_CONN_SUPERVISION_TIMEOUT_DEFAULT 0x1F4
-/* 超时时间4990ms，单位10ms */
+/** @brief Connection maximum latency 4990ms, unit 10ms / 连接最大延迟4990ms，单位10ms */
 #define SLE_CONN_MAX_LATENCY 0x1F3
-/* 广播发送功率 */
+/** @brief Advertisement transmission power / 广播发送功率 */
 #define SLE_ADV_TX_POWER 10
-/* 广播ID */
+/** @brief Default advertisement handle ID / 默认广播句柄ID */
 #define SLE_ADV_HANDLE_DEFAULT 1
-/* 最大广播数据长度 */
+/** @brief Maximum advertisement data length / 最大广播数据长度 */
 #define SLE_ADV_DATA_LEN_MAX 251
 
-/* 广播名称 */
+/** @brief Local device name for SLE keyboard server / SLE键盘服务器本地设备名称 */
 static uint8_t sle_local_name[] = "sle_keyboard_server";
 
+/**
+ * @brief Set advertisement local name data / 设置广播本地名称数据
+ * @param[out] adv_data Pointer to advertisement data buffer / 广播数据缓冲区指针
+ * @param[in] max_len Maximum length of advertisement data buffer / 广播数据缓冲区最大长度
+ * @return Length of local name data added to advertisement / 添加到广播中的本地名称数据长度
+ */
 static uint16_t sle_set_adv_local_name(uint8_t *adv_data, uint16_t max_len)
 {
     uint8_t index = 0;
@@ -61,6 +68,12 @@ static uint16_t sle_set_adv_local_name(uint8_t *adv_data, uint16_t max_len)
     return (uint16_t)index + local_name_len;
 }
 
+/**
+ * @brief Set advertisement data / 设置广播数据
+ * @param[out] adv_data Pointer to advertisement data buffer / 广播数据缓冲区指针
+ * @param[in] length Length of advertisement data buffer / 广播数据缓冲区长度
+ * @return Length of advertisement data set / 设置的广播数据长度
+ */
 static uint16_t sle_set_adv_data(uint8_t *adv_data, uint16_t length)
 {
     size_t len = 0;
@@ -94,6 +107,12 @@ static uint16_t sle_set_adv_data(uint8_t *adv_data, uint16_t length)
     return idx;
 }
 
+/**
+ * @brief Set scan response data / 设置扫描响应数据
+ * @param[out] scan_rsp_data Pointer to scan response data buffer / 扫描响应数据缓冲区指针
+ * @param[in] length Length of scan response data buffer / 扫描响应数据缓冲区长度
+ * @return Length of scan response data set / 设置的扫描响应数据长度
+ */
 static uint16_t sle_set_scan_response_data(uint8_t *scan_rsp_data, uint16_t length)
 {
     uint16_t idx = 0;
@@ -111,11 +130,17 @@ static uint16_t sle_set_scan_response_data(uint8_t *scan_rsp_data, uint16_t leng
     }
     idx += scan_rsp_data_len;
 
-    /* set local name */
+    /** Set local name / 设置本地名称 */
     idx += sle_set_adv_local_name(&scan_rsp_data[idx], SLE_ADV_DATA_LEN_MAX - idx);
     return idx;
 }
 
+/**
+ * @brief Set default announcement parameters / 设置默认公告参数
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 static int sle_set_default_announce_param(void)
 {
     sle_announce_param_t param = {0};
@@ -144,6 +169,12 @@ static int sle_set_default_announce_param(void)
     return sle_set_announce_param(param.announce_handle, &param);
 }
 
+/**
+ * @brief Set default announcement data / 设置默认公告数据
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 static int sle_set_default_announce_data(void)
 {
     errcode_t ret;
@@ -185,27 +216,51 @@ static int sle_set_default_announce_data(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Callback function for announcement enable event / 公告启用事件回调函数
+ * @param[in] announce_id Announcement ID / 公告ID
+ * @param[in] status Status of the enable operation / 启用操作状态
+ */
 static void sle_announce_enable_cbk(uint32_t announce_id, errcode_t status)
 {
     sample_print("%s sle announce enable callback id:%02x, state:%x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id, status);
 }
 
+/**
+ * @brief Callback function for announcement disable event / 公告禁用事件回调函数
+ * @param[in] announce_id Announcement ID / 公告ID
+ * @param[in] status Status of the disable operation / 禁用操作状态
+ */
 static void sle_announce_disable_cbk(uint32_t announce_id, errcode_t status)
 {
     sample_print("%s sle announce disable callback id:%02x, state:%x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id,
                  status);
 }
 
+/**
+ * @brief Callback function for announcement terminal event / 公告终端事件回调函数
+ * @param[in] announce_id Announcement ID / 公告ID
+ */
 static void sle_announce_terminal_cbk(uint32_t announce_id)
 {
     sample_print("%s sle announce terminal callback id:%02x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id);
 }
 
+/**
+ * @brief Callback function for SLE enable event / SLE启用事件回调函数
+ * @param[in] status Status of the SLE enable operation / SLE启用操作状态
+ */
 static void sle_enable_cb(uint8_t status)
 {
     sample_print("%s sle enable callback status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, status);
 }
 
+/**
+ * @brief Register callbacks for SLE keyboard announcement / 注册SLE键盘公告回调函数
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 errcode_t sle_keyboard_announce_register_cbks(void)
 {
     errcode_t ret;
@@ -230,6 +285,12 @@ errcode_t sle_keyboard_announce_register_cbks(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief Initialize SLE keyboard server advertisement / 初始化SLE键盘服务器广播
+ * @return Error code indicating success or failure / 表示成功或失败的错误码
+ * @retval ERRCODE_SLE_SUCCESS Success / 成功
+ * @retval Other error codes Failure / 其他错误码表示失败
+ */
 errcode_t sle_keyboard_server_adv_init(void)
 {
     errcode_t ret;
