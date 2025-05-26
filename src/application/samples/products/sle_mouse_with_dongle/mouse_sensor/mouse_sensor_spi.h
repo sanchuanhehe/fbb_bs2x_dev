@@ -31,7 +31,8 @@ typedef void (*mouse_spi_sensor_func_t)(void);
 #define HAL_SPI_CE_LIN_TOGGLE_ENABLE     (BIT(24))
 #define HAL_SPI_TX_FIFO_NOT_FULL_FLAG    (BIT(1))
 #define HAL_SPI_RX_FIFO_NOT_EMPTY_FLAG   (BIT(3))
-#define MOUSE_SPI SPI_BUS_2
+//#define MOUSE_SPI SPI_BUS_2 //todo 宏定义冲突，将此处注释掉了。mouse_sensor_port.h中同样定义了#define MOUSE_SPI SPI_BUS_0
+
 
 typedef enum mouse_opration {
     READ,

@@ -35,7 +35,7 @@
 #include "errcode.h"
 #include "usb_porting.h"
 #include "sle_low_latency_service.h"
-
+#define CONFIG_MOUSE_ADC_VBAT_PIN 0 //TODO: replace with actual pin number
 #define GAFE_SAMPLE_VALUE_SIGN_BIT      17
 #define VBAT_SAMPLE_INTERVAL_US         30000000
 #define ADC_REFERENCE_VOLTAGE_MV        1500
