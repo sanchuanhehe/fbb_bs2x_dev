@@ -14,6 +14,8 @@
 #include "sle_common.h"
 #include "sle_device_discovery.h"
 #include "sle_mouse_server_adv.h"
+#include "sle_device_manager.h"
+#include "bts_device_manager.h"
 
 #define NAME_MAX_LENGTH                           15
 /* 连接调度间隔12.5ms，单位125us */
@@ -39,6 +41,7 @@
 #define SLE_ADV_RSP_DATA_LEN 11
 #define BD_ADDR_LEN6 6
 
+static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
 static uint8_t g_sle_adv_data[SLE_ADV_DATA_LEN] = {
     // flag
     0x01,
@@ -130,10 +133,17 @@ static void sle_adv_announce_terminal_cbk(uint32_t announce_id)
     osal_printk("%s sle announce terminal id:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, announce_id);
 }
 
-static void sle_adv_enable_cbk(errcode_t status)
+static void sle_adv_enable_cbk(uint8_t status)
 {
     osal_printk("%s sle enable status:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, status);
 }
+
+static void sle_mouse_server_sample_sle_power_on_cbk(uint8_t status)
+{
+    osal_printk("sle power on: %d.\r\n", status);
+    enable_sle();
+}
+
 
 static void sle_adv_announce_register_cbks(void)
 {
@@ -141,8 +151,11 @@ static void sle_adv_announce_register_cbks(void)
     seek_cbks.announce_enable_cb = sle_adv_announce_enable_cbk;
     seek_cbks.announce_disable_cb = sle_adv_announce_disable_cbk;
     seek_cbks.announce_terminal_cb = sle_adv_announce_terminal_cbk;
-    seek_cbks.sle_enable_cb = sle_adv_enable_cbk;
+    //seek_cbks.sle_enable_cb = sle_adv_enable_cbk;
+    g_sle_dev_mgr_cbk.sle_power_on_cb = sle_mouse_server_sample_sle_power_on_cbk;
+    g_sle_dev_mgr_cbk.sle_enable_cb = sle_adv_enable_cbk;
     sle_announce_seek_register_callbacks(&seek_cbks);
+    sle_dev_manager_register_callbacks(&g_sle_dev_mgr_cbk);
 }
 
 void sle_mouse_server_adv_init(void)
