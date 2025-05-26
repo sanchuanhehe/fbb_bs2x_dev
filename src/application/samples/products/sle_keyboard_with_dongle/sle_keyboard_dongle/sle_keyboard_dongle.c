@@ -2,11 +2,11 @@
  * @file sle_keyboard_dongle.c
  * @brief SLE Keyboard Dongle Source / SLE键盘适配器源代码
  * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
- * 
+ *
  * Implements the SLE keyboard dongle functionality / 实现SLE键盘适配器功能
- * 
+ *
  * @author @CompanyNameTag
- * 
+ *
  * @date 2023-07-28
  * - Initial version / 初始版本
  */
@@ -28,55 +28,64 @@
 /**
  * @brief SLE keyboard dongle task priority / SLE键盘适配器任务优先级
  */
-#define SLE_KEYBOARD_DONGLE_TASK_PRIO       (osPriority_t)(17)
+#define SLE_KEYBOARD_DONGLE_TASK_PRIO (osPriority_t)(17)
 /**
  * @brief SLE keyboard dongle task delay in milliseconds / SLE键盘适配器任务延迟毫秒数
  */
-#define SLE_KEYBOARD_DONGLE_TASK_DELAY_MS   2000
+#define SLE_KEYBOARD_DONGLE_TASK_DELAY_MS 2000
 /**
  * @brief USB HID keyboard initialization delay / USB HID键盘初始化延迟
  */
-#define USB_HID_KEYBOARD_INIT_DELAY_MS      (500UL)
+#define USB_HID_KEYBOARD_INIT_DELAY_MS (500UL)
 /**
  * @brief USB keyboard reporter length / USB键盘报告长度
  */
-#define USB_KEYBOARD_REPORTER_LEN           9
+#define USB_KEYBOARD_REPORTER_LEN 9
 /**
  * @brief SLE keyboard USB manufacturer string / SLE键盘USB制造商字符串
  */
-#define SLE_KRYBOARD_USB_MANUFACTURER       { 'H', 0, 'H', 0, 'H', 0, 'H', 0, 'l', 0, 'i', 0, 'c', 0, 'o', 0, 'n', 0 }
+#define SLE_KRYBOARD_USB_MANUFACTURER                                          \
+    {                                                                          \
+        'H', 0, 'H', 0, 'H', 0, 'H', 0, 'l', 0, 'i', 0, 'c', 0, 'o', 0, 'n', 0 \
+    }
 /**
  * @brief SLE keyboard USB manufacturer string length / SLE键盘USB制造商字符串长度
  */
-#define SLE_KRYBOARD_USB_MANUFACTURER_LEN   20
+#define SLE_KRYBOARD_USB_MANUFACTURER_LEN 20
 /**
  * @brief SLE keyboard USB product string / SLE键盘USB产品字符串
  */
-#define SLE_KRYBOARD_USB_PRODUCT    { 'H', 0, 'H', 0, '6', 0, '6', 0, '6', 0, '6', 0, ' ', 0, 'U', 0, 'S', 0, 'B', 0 }
+#define SLE_KRYBOARD_USB_PRODUCT                                                       \
+    {                                                                                  \
+        'H', 0, 'H', 0, '6', 0, '6', 0, '6', 0, '6', 0, ' ', 0, 'U', 0, 'S', 0, 'B', 0 \
+    }
 /**
  * @brief SLE keyboard USB product string length / SLE键盘USB产品字符串长度
  */
-#define SLE_KRYBOARD_USB_PRODUCT_LEN        22
+#define SLE_KRYBOARD_USB_PRODUCT_LEN 22
 /**
  * @brief SLE keyboard USB serial string / SLE键盘USB序列号字符串
  */
-#define SLE_KRYBOARD_USB_SERIAL             { '2', 0, '0', 0, '2', 0, '0', 0, '0', 0, '6', 0, '2', 0, '4', 0 }
+#define SLE_KRYBOARD_USB_SERIAL                                        \
+    {                                                                  \
+        '2', 0, '0', 0, '2', 0, '0', 0, '0', 0, '6', 0, '2', 0, '4', 0 \
+    }
 /**
  * @brief SLE keyboard USB serial string length / SLE键盘USB序列号字符串长度
  */
-#define SLE_KRYBOARD_USB_SERIAL_LEN         16
+#define SLE_KRYBOARD_USB_SERIAL_LEN 16
 /**
  * @brief Maximum receive length / 最大接收长度
  */
-#define RECV_MAX_LENGTH                     13
+#define RECV_MAX_LENGTH 13
 /**
  * @brief USB receive stack size / USB接收栈大小
  */
-#define USB_RECV_STACK_SIZE                 0x400
+#define USB_RECV_STACK_SIZE 0x400
 /**
  * @brief Log tag for SLE keyboard dongle / SLE键盘适配器日志标签
  */
-#define SLE_KEYBOARD_DONGLE_LOG             "[sle keyboard dongle]"
+#define SLE_KEYBOARD_DONGLE_LOG "[sle keyboard dongle]"
 
 /**
  * @brief SLE keyboard dongle initialization flag / SLE键盘适配器初始化标志
@@ -131,7 +140,7 @@ static void *sle_keyboard_dongle_usb_recv_task(const char *para)
 
     osal_printk("%s enter sle_keyboard_dongle_usb_recv_task!\r\n", SLE_KEYBOARD_DONGLE_LOG);
     while (1) {
-        int32_t ret = fhid_recv_data(g_sle_keyboard_dongle_hid_index, (char*)recv_hid_data, RECV_MAX_LENGTH);
+        int32_t ret = fhid_recv_data(g_sle_keyboard_dongle_hid_index, (char *)recv_hid_data, RECV_MAX_LENGTH);
         if (ret <= 0) {
             osal_msleep(SLE_KEYBOARD_DONGLE_TASK_DELAY_MS);
         }
@@ -160,28 +169,15 @@ static uint8_t sle_keyboard_dongle_init_internal(device_type dtype)
     }
 
     const char manufacturer[SLE_KRYBOARD_USB_MANUFACTURER_LEN] = SLE_KRYBOARD_USB_MANUFACTURER;
-    struct device_string str_manufacturer = {
-        .str = manufacturer,
-        .len = SLE_KRYBOARD_USB_MANUFACTURER_LEN
-    };
+    struct device_string str_manufacturer = {.str = manufacturer, .len = SLE_KRYBOARD_USB_MANUFACTURER_LEN};
 
     const char product[SLE_KRYBOARD_USB_PRODUCT_LEN] = SLE_KRYBOARD_USB_PRODUCT;
-    struct device_string str_product = {
-        .str = product,
-        .len = SLE_KRYBOARD_USB_PRODUCT_LEN
-    };
+    struct device_string str_product = {.str = product, .len = SLE_KRYBOARD_USB_PRODUCT_LEN};
 
     const char serial[SLE_KRYBOARD_USB_SERIAL_LEN] = SLE_KRYBOARD_USB_SERIAL;
-    struct device_string str_serial_number = {
-        .str = serial,
-        .len = SLE_KRYBOARD_USB_SERIAL_LEN
-    };
+    struct device_string str_serial_number = {.str = serial, .len = SLE_KRYBOARD_USB_SERIAL_LEN};
 
-    struct device_id dev_id = {
-        .vendor_id = 0x1111,
-        .product_id = 0x0009,
-        .release_num = 0x0800
-    };
+    struct device_id dev_id = {.vendor_id = 0x1111, .product_id = 0x0009, .release_num = 0x0800};
 
     if (dtype == DEV_HID) {
         g_sle_keyboard_dongle_hid_index = sle_keyboard_dongle_set_report_desc_hid();
@@ -226,7 +222,9 @@ static uint8_t sle_keyboard_dongle_init(void)
  * @param[in] data Handle value data / 句柄值数据
  * @param[in] status Operation status / 操作状态
  */
-static void sle_keyboard_notification_cb(uint8_t client_id, uint16_t conn_id, ssapc_handle_value_t *data,
+static void sle_keyboard_notification_cb(uint8_t client_id,
+                                         uint16_t conn_id,
+                                         ssapc_handle_value_t *data,
                                          errcode_t status)
 {
     unused(client_id);
@@ -258,7 +256,9 @@ static void sle_keyboard_notification_cb(uint8_t client_id, uint16_t conn_id, ss
  * @param[in] data Handle value data / 句柄值数据
  * @param[in] status Operation status / 操作状态
  */
-static void sle_keyboard_indication_cb(uint8_t client_id, uint16_t conn_id, ssapc_handle_value_t *data,
+static void sle_keyboard_indication_cb(uint8_t client_id,
+                                       uint16_t conn_id,
+                                       ssapc_handle_value_t *data,
                                        errcode_t status)
 {
     unused(client_id);
@@ -312,7 +312,7 @@ static void *sle_keyboard_dongle_task(const char *arg)
  */
 static void sle_keyboard_dongle_entry(void)
 {
-    osThreadAttr_t attr = { 0 };
+    osThreadAttr_t attr = {0};
 
     attr.name = "SLEKeyBoardDongleTask";
     attr.attr_bits = 0U;
