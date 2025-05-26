@@ -549,6 +549,44 @@ typedef struct {
 
 /**
  * @if Eng
+ * @brief  Enable SLE stack.
+ * @par Description: Enable SLE stack.
+ * @param NULL
+ * @retval error code.
+ * @par Depends:
+ * @li sle_common.h
+ * @else
+ * @brief  使能SLE协议栈。
+ * @par Description: 使能SLE协议栈。
+ * @param NULL
+ * @retval 执行结果错误码。
+ * @par 依赖：
+ * @li sle_common.h
+ * @endif
+ */
+errcode_t enable_sle(void);
+
+/**
+ * @if Eng
+ * @brief  Disable SLE stack.
+ * @par Description: Disable SLE stack.
+ * @param NULL
+ * @retval error code.
+ * @par Depends:
+ * @li sle_common.h
+ * @else
+ * @brief  关闭SLE协议栈。
+ * @par Description: 关闭SLE协议栈。
+ * @param NULL
+ * @retval 执行结果错误码。
+ * @par 依赖：
+ * @li sle_common.h
+ * @endif
+ */
+errcode_t disable_sle(void);
+
+/**
+ * @if Eng
  * @brief  Set local device address.
  * @par Description: Set local device address.
  * @param  [in]  addr address.

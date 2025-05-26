@@ -20,6 +20,8 @@
 #include "sle_ssap_server.h"
 #include "sle_mouse_server_adv.h"
 #include "sle_mouse_server.h"
+#include "sle_device_manager.h"
+#include "bts_device_manager.h"
 
 #define SLE_ADV_HANDLE_DEFAULT     1
 #define USB_MOUSE_TASK_DELAY_MS    2000
@@ -45,6 +47,7 @@ static uint8_t g_sle_input_report[SLE_MOUSE_REPORT_LENGTH] = {0};
 static uint8_t g_sle_hid_control_point = 1;
 static sle_item_handle_t g_service_hdl[HID_ELEMENT_NUM] = {0};
 static uint8_t g_cccd[2] = {0x00, 0x0};
+static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
 static uint8_t g_input_report_descriptor[SLE_SRV_ENCODED_REPORT_LEN] = {0};
 /* Hid Information characteristic not defined */
 static uint8_t g_sle_hid_group_uuid[HID_ELEMENT_NUM][SLE_UUID_LEN] = {
@@ -535,7 +538,13 @@ errcode_t sle_hid_mouse_server_send_input_report(ssap_mouse_key_t *mouse_data)
     return ERRCODE_SLE_SUCCESS;
 }
 
-static void ble_enable_cbk(errcode_t status)
+static void sle_keyboard_server_sample_sle_power_on_cbk(uint8_t status)
+{
+    osal_printk("sle power on: %d.\r\n", status);
+    enable_sle();
+}
+
+static void ble_enable_cbk(uint8_t status)
 {
     osal_printk("enable status:%d\r\n", status);
     g_sle_enable = true;
@@ -544,7 +553,10 @@ static void ble_enable_cbk(errcode_t status)
 static void bt_core_enable_cb_register(void)
 {
     sle_announce_seek_callbacks_t seek_cbks = { 0 };
-    seek_cbks.sle_enable_cb = ble_enable_cbk;
+    //seek_cbks.sle_enable_cb = ble_enable_cbk;
+    g_sle_dev_mgr_cbk.sle_enable_cb = ble_enable_cbk;
+    g_sle_dev_mgr_cbk.sle_power_on_cb = sle_keyboard_server_sample_sle_power_on_cbk;
+    sle_dev_manager_register_callbacks(&g_sle_dev_mgr_cbk);
     if (sle_announce_seek_register_callbacks(&seek_cbks) != ERRCODE_BT_SUCCESS) {
         osal_printk("register sle_enable failed\r\n");
     }
