@@ -6,19 +6,46 @@
  * History: \n
  * 2023-08-01, Create file. \n
  */
+
 #include "osal_debug.h"
 #include "gpio.h"
 #include "pinctrl.h"
 #include "tcxo.h"
 #include "mouse_button.h"
 
+/**
+ * @def PIN_LEFT
+ * @brief 鼠标左键GPIO引脚
+ */
 #define PIN_LEFT        S_MGPIO2
+
+/**
+ * @def PIN_RIGHT
+ * @brief 鼠标右键GPIO引脚
+ */
 #define PIN_RIGHT       S_MGPIO3
+
+/**
+ * @def PIN_MID
+ * @brief 鼠标中键GPIO引脚
+ */
 #define PIN_MID         S_MGPIO4
+
+/**
+ * @def DELAY_US200
+ * @brief 按键消抖延时，单位为微秒
+ */
 #define DELAY_US200     200
 
+/**
+ * @brief 全局鼠标按键状态指针
+ */
 static mouse_key_t *g_mouse_key = NULL;
 
+/**
+ * @brief 鼠标左键中断回调函数
+ * @param pin 触发中断的GPIO引脚
+ */
 static void mouse_left_button_func(pin_t pin)
 {
     osal_printk("Left button clicked.\r\n");
@@ -28,6 +55,10 @@ static void mouse_left_button_func(pin_t pin)
     }
 }
 
+/**
+ * @brief 鼠标右键中断回调函数
+ * @param pin 触发中断的GPIO引脚
+ */
 static void mouse_right_button_func(pin_t pin)
 {
     osal_printk("Right button clicked.\r\n");
@@ -37,6 +68,10 @@ static void mouse_right_button_func(pin_t pin)
     }
 }
 
+/**
+ * @brief 鼠标中键中断回调函数
+ * @param pin 触发中断的GPIO引脚
+ */
 static void mouse_mid_button_func(pin_t pin)
 {
     osal_printk("MID button clicked.\r\n");
@@ -46,6 +81,10 @@ static void mouse_mid_button_func(pin_t pin)
     }
 }
 
+/**
+ * @brief 鼠标按键初始化
+ * @param mouse_key 鼠标按键状态结构体指针
+ */
 void mouse_button_init(mouse_key_t *mouse_key)
 {
     g_mouse_key = mouse_key;

@@ -1,10 +1,9 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Mouse sensor paw3395 source \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file mouse_sensor_paw3395.c
+ * @brief Mouse sensor paw3395 source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
 
 #include "pinctrl.h"
@@ -42,8 +41,14 @@
 #define Y_HIGH_8BIT                     5
 #define SPI_MHZ                         4
 
+/**
+ * @brief PAW3395初始化中间步骤
+ */
 static void mouse_sensor_mid_init_1(void);
 
+/**
+ * @brief PAW3395配置表
+ */
 const spi_mouse_cfg_t g_sle_paw3395db_cfg[] = {
     { WRITE, 0x3A, 0x5A, NULL },
     { DELAY, 5000, 0x00, NULL },
@@ -198,6 +203,9 @@ const spi_mouse_cfg_t g_sle_paw3395db_cfg[] = {
     { WRITE, 0x7F, 0x00, NULL },
 };
 
+/**
+ * @brief PAW3395初始化中间步骤
+ */
 static void mouse_sensor_mid_init_1(void)
 {
     for (int i = 0; i < MOUSE_3395_READ_TIMES; i++) {
@@ -215,6 +223,9 @@ static void mouse_sensor_mid_init_1(void)
     mouse_sensor_spi_opration(cfg, sizeof(cfg) / sizeof(spi_mouse_cfg_t));
 }
 
+/**
+ * @brief 修改PAW3395的DPI
+ */
 static void paw3395_chaneg_dpi(void)
 {
     spi_mouse_cfg_t dpi_reg[] = {
@@ -226,6 +237,10 @@ static void paw3395_chaneg_dpi(void)
     mouse_sensor_spi_opration(dpi_reg, sizeof(dpi_reg) / sizeof(spi_mouse_cfg_t));
 }
 
+/**
+ * @brief 初始化PAW3395鼠标传感器
+ * @return mouse_freq_t 返回鼠标频率
+ */
 static mouse_freq_t paw_3395_mouse_init(void)
 {
     mouse_sensor_spi_open(0, 0, 0, SPI_MHZ);
@@ -234,6 +249,11 @@ static mouse_freq_t paw_3395_mouse_init(void)
     return MOUSE_FREQ_8K;
 }
 
+/**
+ * @brief 获取PAW3395的X/Y坐标
+ * @param[out] x X轴坐标指针
+ * @param[out] y Y轴坐标指针
+ */
 static void paw3395_get_xy(int16_t *x, int16_t *y)
 {
     if (x == NULL || y == NULL) {
@@ -245,11 +265,18 @@ static void paw3395_get_xy(int16_t *x, int16_t *y)
     *y = ((recv_motion_data[Y_LOW_8BIT] | (recv_motion_data[Y_HIGH_8BIT] << XY_DATA_SHIFT_LEN)));
 }
 
+/**
+ * @brief PAW3395操作结构体
+ */
 mouse_sensor_oprator_t g_sle_paw3395_operator = {
     .get_xy = paw3395_get_xy,
     .init = paw_3395_mouse_init,
 };
 
+/**
+ * @brief 获取PAW3395操作结构体
+ * @return mouse_sensor_oprator_t 操作结构体
+ */
 mouse_sensor_oprator_t sle_mouse_get_paw3395_operator(void)
 {
     return g_sle_paw3395_operator;

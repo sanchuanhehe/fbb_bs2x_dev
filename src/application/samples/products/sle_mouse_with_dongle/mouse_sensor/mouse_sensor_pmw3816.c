@@ -1,10 +1,9 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Mouse sensor pmw3816 source \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-15, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file mouse_sensor_pmw3816.c
+ * @brief Mouse sensor pmw3816 source
+ * @author @CompanyNameTag
+ * @date 2023-08-15
  */
 
 #include "gpio.h"
@@ -30,8 +29,16 @@
 #define Y_LOW_BIT                       0x4
 #define Y_HI_BIT                        0x5
 
+/**
+ * @brief 鼠标通知数据结构体（外部定义）
+ */
 extern ssap_mouse_key_t g_mouse_notify_data;
 
+/**
+ * @brief 读取PMW3816寄存器
+ * @param reg_addr 寄存器地址
+ * @return uint8_t 读取到的寄存器值
+ */
 static uint8_t pmw3816_read_reg(uint8_t reg_addr)
 {
     uapi_gpio_set_val(SPI_PIN_CS, 0);
@@ -40,6 +47,9 @@ static uint8_t pmw3816_read_reg(uint8_t reg_addr)
     return ret;
 }
 
+/**
+ * @brief PMW3816配置表
+ */
 const spi_mouse_cfg_t g_sle_pmw3816dm_cfg[] = {
     { WRITE, 0x3A, 0x5A, NULL },
     { READ, 0x00, 0x00, NULL },
@@ -110,6 +120,9 @@ const spi_mouse_cfg_t g_sle_pmw3816dm_cfg[] = {
     { WRITE, 0x5B, 0x20, NULL },
 };
 
+/**
+ * @brief 发送鼠标消息到主机
+ */
 static void sle_send_msg(void)
 {
     uint8_t conn_state = SLE_ACB_STATE_NONE;
@@ -127,6 +140,10 @@ static void sle_send_msg(void)
     }
 }
 
+/**
+ * @brief PMW3816移动中断回调函数
+ * @param pin 触发中断的引脚
+ */
 static void pmw3816dm_mov_func(pin_t pin)
 {
     uint8_t recv_motion_data[READ_LENGTH] = { 0x00 };
@@ -146,6 +163,10 @@ static void pmw3816dm_mov_func(pin_t pin)
     uapi_gpio_clear_interrupt(pin);
 }
 
+/**
+ * @brief 初始化PMW3816鼠标传感器
+ * @return mouse_freq_t 返回鼠标频率
+ */
 static mouse_freq_t pmw3816_mouse_init(void)
 {
     mouse_sensor_spi_open(0, 1, 1, 1);
@@ -169,6 +190,11 @@ static mouse_freq_t pmw3816_mouse_init(void)
     return MOUSE_FREQ_1K;
 }
 
+/**
+ * @brief 获取PMW3816的X/Y坐标
+ * @param[out] x X轴坐标指针
+ * @param[out] y Y轴坐标指针
+ */
 void pmw3816_get_xy(int16_t *x, int16_t *y)
 {
     if (x == NULL || y == NULL) {
@@ -188,11 +214,18 @@ void pmw3816_get_xy(int16_t *x, int16_t *y)
     *y = ((y_low | (y_hi << XY_DATA_SHIFT_LEN)));
 }
 
+/**
+ * @brief PMW3816操作结构体
+ */
 mouse_sensor_oprator_t g_sle_pmw3816_operator = {
     .get_xy = pmw3816_get_xy,
     .init = pmw3816_mouse_init,
 };
 
+/**
+ * @brief 获取PMW3816操作结构体
+ * @return mouse_sensor_oprator_t 操作结构体
+ */
 mouse_sensor_oprator_t sle_mouse_get_pmw3816_operator(void)
 {
     return g_sle_pmw3816_operator;

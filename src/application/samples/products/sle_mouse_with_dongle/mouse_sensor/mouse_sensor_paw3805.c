@@ -1,10 +1,9 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Mouse sensor paw3805 source \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-15, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file mouse_sensor_paw3805.c
+ * @brief Mouse sensor paw3805 source
+ * @author @CompanyNameTag
+ * @date 2023-08-15
  */
 
 #include "gpio.h"
@@ -24,8 +23,16 @@
 #define X_HI_REG                        0x11
 #define Y_HI_REG                        0x12
 
+/**
+ * @brief 鼠标通知数据结构体（外部定义）
+ */
 extern ssap_mouse_key_t g_mouse_notify_data;
 
+/**
+ * @brief 读取PAW3805寄存器
+ * @param reg_addr 寄存器地址
+ * @return uint8_t 读取到的寄存器值
+ */
 static uint8_t paw3805_read_reg(uint8_t reg_addr)
 {
     uapi_gpio_set_val(SPI_PIN_CS, 0);
@@ -34,6 +41,9 @@ static uint8_t paw3805_read_reg(uint8_t reg_addr)
     return ret;
 }
 
+/**
+ * @brief 发送鼠标消息到主机
+ */
 static void sle_send_msg(void)
 {
     uint8_t conn_state = SLE_ACB_STATE_NONE;
@@ -51,6 +61,11 @@ static void sle_send_msg(void)
     }
 }
 
+/**
+ * @brief 获取PAW3805的X/Y坐标
+ * @param[out] x X轴坐标指针
+ * @param[out] y Y轴坐标指针
+ */
 void paw3805_get_xy(int16_t *x, int16_t *y)
 {
     if (x == NULL || y == NULL) {
@@ -70,6 +85,10 @@ void paw3805_get_xy(int16_t *x, int16_t *y)
     *y = ((y_low | (y_hi << XY_DATA_SHIFT_LEN)));
 }
 
+/**
+ * @brief PAW3805移动中断回调函数
+ * @param pin 触发中断的引脚
+ */
 static void paw3805ek_mov_func(pin_t pin)
 {
     int16_t x, y;
@@ -81,6 +100,10 @@ static void paw3805ek_mov_func(pin_t pin)
     sle_send_msg();
 }
 
+/**
+ * @brief 初始化PAW3805鼠标传感器
+ * @return mouse_freq_t 返回鼠标频率
+ */
 static mouse_freq_t paw_3805_mouse_init(void)
 {
     mouse_sensor_spi_open(0, 1, 1, 1);
@@ -96,11 +119,18 @@ static mouse_freq_t paw_3805_mouse_init(void)
     return MOUSE_FREQ_1K;
 }
 
+/**
+ * @brief PAW3805操作结构体
+ */
 mouse_sensor_oprator_t g_sle_paw3805_operator = {
     .get_xy = paw3805_get_xy,
     .init = paw_3805_mouse_init,
 };
 
+/**
+ * @brief 获取PAW3805操作结构体
+ * @return mouse_sensor_oprator_t 操作结构体
+ */
 mouse_sensor_oprator_t sle_mouse_get_paw3805_operator(void)
 {
     return g_sle_paw3805_operator;

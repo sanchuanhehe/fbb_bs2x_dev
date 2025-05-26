@@ -127,6 +127,11 @@ static qdec_config_t g_usb_qdec_config = QDEC_DEFAULT_CONFIG;
 static int g_usb_mouse_hid_index;
 extern errcode_t sle_low_latency_dongle_get_em_data(uint8_t* em_data);
 
+/**
+ * @brief 发送鼠标消息到SSAP
+ * @return true 发送成功
+ * @return false 发送失败
+ */
 static bool sle_send_msg(void)
 {
     uint8_t conn_state = SLE_ACB_STATE_NONE;
@@ -145,6 +150,10 @@ static bool sle_send_msg(void)
     return true;
 }
 
+/**
+ * @brief 鼠标左键中断回调函数
+ * @param[in] pin 左键GPIO引脚
+ */
 static void mouse_left_button_func(pin_t pin)
 {
     uapi_tcxo_delay_us(DELAY_US200);
@@ -154,6 +163,10 @@ static void mouse_left_button_func(pin_t pin)
     uapi_gpio_clear_interrupt(pin);
 }
 
+/**
+ * @brief 鼠标右键中断回调函数
+ * @param[in] pin 右键GPIO引脚
+ */
 static void mouse_right_button_func(pin_t pin)
 {
     uapi_tcxo_delay_us(DELAY_US200);
@@ -163,6 +176,10 @@ static void mouse_right_button_func(pin_t pin)
     uapi_gpio_clear_interrupt(pin);
 }
 
+/**
+ * @brief 鼠标中键中断回调函数
+ * @param[in] pin 中键GPIO引脚
+ */
 static void mouse_mid_button_func(pin_t pin)
 {
     uapi_tcxo_delay_us(DELAY_US200);
@@ -172,6 +189,12 @@ static void mouse_mid_button_func(pin_t pin)
     uapi_gpio_clear_interrupt(pin);
 }
 
+/**
+ * @brief QDEC编码器回调
+ * @param[in] argc 编码器变化量
+ * @param[in] argv 未使用
+ * @return 总是返回0
+ */
 static int qdec_report_callback(int argc, char *argv[])
 {
     UNUSED(argv);
@@ -184,6 +207,9 @@ static int qdec_report_callback(int argc, char *argv[])
     return 0;
 }
 
+/**
+ * @brief 鼠标IO初始化，包括按键和QDEC相关引脚
+ */
 static void mouse_io_init(void)
 {
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_LEFT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
@@ -205,6 +231,10 @@ static void mouse_io_init(void)
     uapi_gpio_set_val(CONFIG_MOUSE_PIN_QDEC_COMMON, 0);
 }
 
+/**
+ * @brief 电池电压采样定时器回调
+ * @param[in] data 定时器句柄
+ */
 static void vbat_sample_cb(uintptr_t data)
 {
     int adc_value = 0;
@@ -214,6 +244,9 @@ static void vbat_sample_cb(uintptr_t data)
     uapi_timer_start((timer_handle_t)data, VBAT_SAMPLE_INTERVAL_US, vbat_sample_cb, data);
 }
 
+/**
+ * @brief 初始化电池电压ADC采样
+ */
 void vbat_adc_init(void)
 {
     uapi_pin_set_mode(CONFIG_MOUSE_ADC_VBAT_PIN, PIN_MODE_0);
@@ -231,6 +264,11 @@ void vbat_adc_init(void)
     uapi_timer_start(timer, VBAT_SAMPLE_INTERVAL_US, vbat_sample_cb, (uintptr_t)timer);
 }
 
+/**
+ * @brief 鼠标初始化，包括IO、ADC、QDEC、传感器等
+ * @param[in] sensor_id 传感器ID
+ * @return mouse_freq_t 鼠标工作频率
+ */
 mouse_freq_t mouse_init(uint32_t sensor_id)
 {
     mouse_io_init();
@@ -247,6 +285,14 @@ mouse_freq_t mouse_init(uint32_t sensor_id)
     return freq;
 }
 
+/**
+ * @brief 获取鼠标按键信息
+ * @param[out] button_mask 按键掩码
+ * @param[out] x X轴坐标
+ * @param[out] y Y轴坐标
+ * @param[out] wheel 滚轮值
+ * @return errcode_t 操作结果
+ */
 static errcode_t sle_mouse_key_set(int8_t *button_mask, int16_t *x, int16_t *y, int8_t *wheel)
 {
     g_usb_hid_hs_mouse_operator.get_xy(x, y);
@@ -256,6 +302,9 @@ static errcode_t sle_mouse_key_set(int8_t *button_mask, int16_t *x, int16_t *y, 
     return ERRCODE_SUCC;
 }
 
+/**
+ * @brief 获取鼠标按键并发送输入报告
+ */
 void sle_mouse_get_key(void)
 {
     int8_t button_mask = 0;
@@ -270,6 +319,9 @@ void sle_mouse_get_key(void)
     sle_hid_mouse_server_send_input_report(&g_mouse_notify_data);
 }
 
+/**
+ * @brief Sle低延迟鼠标应用初始化，注册回调
+ */
 void sle_low_latency_mouse_app_init(void)
 {
     sle_low_latency_mouse_callbacks_t mouse_cbk;
@@ -278,6 +330,12 @@ void sle_low_latency_mouse_app_init(void)
     return ;
 }
 
+/**
+ * @brief Dongle回调，获取鼠标数据并上报USB
+ * @param[out] data 数据指针
+ * @param[out] length 数据长度
+ * @param[out] device_index 设备索引
+ */
 void dongle_cbk(uint8_t **data, uint16_t *length, uint8_t *device_index)
 {
     static uint8_t report_count = 0;
@@ -302,6 +360,11 @@ void dongle_cbk(uint8_t **data, uint16_t *length, uint8_t *device_index)
     *device_index = g_usb_mouse_hid_index;
 }
 
+/**
+ * @brief USB高精度鼠标数据上报
+ * @param[in] data 鼠标数据
+ * @param[in] lenth 数据长度
+ */
 void usb_sle_high_mouse_report(uint8_t *data, uint8_t lenth)
 {
     if (lenth > sizeof(g_send_mouse_msg)) {
@@ -318,6 +381,10 @@ void usb_sle_high_mouse_report(uint8_t *data, uint8_t lenth)
     fhid_send_data(g_usb_mouse_hid_index, (char *)&g_send_mouse_msg, USB_MOUSE_REPORTER_LEN);
 }
 
+/**
+ * @brief Sle低延迟dongle初始化，注册USB回调
+ * @param[in] usb_hid_index USB HID索引
+ */
 void sle_low_latency_dongle_init(int usb_hid_index)
 {
     g_usb_mouse_hid_index = usb_hid_index;

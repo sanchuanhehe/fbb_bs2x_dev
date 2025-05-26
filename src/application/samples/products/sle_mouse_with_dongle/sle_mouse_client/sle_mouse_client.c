@@ -1,11 +1,11 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: SLE Uart Client Source. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file sle_mouse_client.c
+ * @brief SLE Uart Client Source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
+
 #include "string.h"
 #include "common_def.h"
 #include "osal_debug.h"
@@ -24,23 +24,52 @@
 
 #define SLE_MOUSE_DONGLE_CLIENT_LOG                     "[sle mouse dongle client]"
 
+/**
+ * @brief SLE寻址回调结构体
+ */
 static sle_announce_seek_callbacks_t g_sle_mouse_client_seek_cbk = { 0 };
+/**
+ * @brief SLE连接回调结构体
+ */
 static sle_connection_callbacks_t g_sle_mouse_client_connect_cbk = { 0 };
+/**
+ * @brief SLE鼠标服务端地址
+ */
 static sle_addr_t g_sle_mouse_server_addr = { 0 };
+/**
+ * @brief SLE鼠标客户端连接ID
+ */
 static uint16_t g_sle_mouse_client_conn_id = 0;
+/**
+ * @brief SLE鼠标客户端连接状态
+ */
 static uint8_t g_sle_mouse_client_conn_state = SLE_ACB_STATE_NONE;
+/**
+ * @brief SLE使能标志
+ */
 static bool g_sle_enable = 0;
 
+/**
+ * @brief 获取SLE鼠标客户端连接状态
+ * @return 当前连接状态
+ */
 uint8_t get_g_sle_mouse_client_conn_state(void)
 {
     return g_sle_mouse_client_conn_state;
 }
 
+/**
+ * @brief 获取SLE鼠标客户端连接ID
+ * @return 当前连接ID
+ */
 uint16_t get_g_sle_mouse_client_conn_id(void)
 {
     return g_sle_mouse_client_conn_id;
 }
 
+/**
+ * @brief 启动SLE鼠标扫描
+ */
 static void sle_mouse_client_start_scan(void)
 {
     sle_seek_param_t param = { 0 };
@@ -56,6 +85,10 @@ static void sle_mouse_client_start_scan(void)
     osDelay(SLE_UART_TASK_DELAY_MS);
 }
 
+/**
+ * @brief SLE使能回调
+ * @param status 使能状态
+ */
 static void sle_mouse_client_sle_enable_cbk(errcode_t status)
 {
     if (status != 0) {
@@ -67,6 +100,10 @@ static void sle_mouse_client_sle_enable_cbk(errcode_t status)
     }
 }
 
+/**
+ * @brief SLE寻址使能回调
+ * @param status 状态
+ */
 static void sle_mouse_client_seek_enable_cbk(errcode_t status)
 {
     if (status != 0) {
@@ -74,6 +111,10 @@ static void sle_mouse_client_seek_enable_cbk(errcode_t status)
     }
 }
 
+/**
+ * @brief SLE寻址结果回调
+ * @param seek_result_data 寻址结果数据
+ */
 static void sle_mouse_client_seek_result_info_cbk(sle_seek_result_info_t *seek_result_data)
 {
     osal_printk("sle mouse pattern:%s\r\n", "sle_mouse");
@@ -91,6 +132,10 @@ static void sle_mouse_client_seek_result_info_cbk(sle_seek_result_info_t *seek_r
     }
 }
 
+/**
+ * @brief SLE寻址禁用回调
+ * @param status 状态
+ */
 static void sle_mouse_client_seek_disable_cbk(errcode_t status)
 {
     if (status != 0) {
@@ -101,6 +146,9 @@ static void sle_mouse_client_seek_disable_cbk(errcode_t status)
     }
 }
 
+/**
+ * @brief 注册SLE鼠标寻址回调
+ */
 static void sle_mouse_client_seek_cbk_register(void)
 {
     g_sle_mouse_client_seek_cbk.sle_enable_cb = sle_mouse_client_sle_enable_cbk;
@@ -112,6 +160,14 @@ static void sle_mouse_client_seek_cbk_register(void)
     }
 }
 
+/**
+ * @brief SLE连接状态变化回调
+ * @param conn_id 连接ID
+ * @param addr 设备地址
+ * @param conn_state 连接状态
+ * @param pair_state 配对状态
+ * @param disc_reason 断开原因
+ */
 static void sle_mouse_client_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *addr,
                                                        sle_acb_state_t conn_state, sle_pair_state_t pair_state,
                                                        sle_disc_reason_t disc_reason)
@@ -133,12 +189,18 @@ static void sle_mouse_client_connect_state_changed_cbk(uint16_t conn_id, const s
     }
 }
 
+/**
+ * @brief 注册SLE鼠标连接回调
+ */
 static void sle_mouse_client_connect_cbk_register(void)
 {
     g_sle_mouse_client_connect_cbk.connect_state_changed_cb = sle_mouse_client_connect_state_changed_cbk;
     sle_connection_register_callbacks(&g_sle_mouse_client_connect_cbk);
 }
 
+/**
+ * @brief SLE鼠标客户端初始化
+ */
 void sle_mouse_client_init(void)
 {
     sle_mouse_client_seek_cbk_register();

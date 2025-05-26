@@ -1,11 +1,11 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: SLE mouse server Source. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file sle_mouse_server.c
+ * @brief SLE mouse server Source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
+
 #include <stdint.h>
 #include "securec.h"
 #include "errcode.h"
@@ -157,24 +157,42 @@ typedef enum {
     SLE_DIS_INDEX3, // pnp id
 } sle_dis_index_t;
 
+/**
+ * @brief 获取鼠标配对状态
+ * @param[out] pair_state 配对状态指针
+ * @return errcode_t 错误码
+ */
 errcode_t get_g_sle_mouse_pair_state(uint32_t *pair_state)
 {
     *pair_state = g_mouse_sle_pair_status;
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 获取鼠标服务端连接状态
+ * @param[out] conn_state 连接状态指针
+ * @return errcode_t 错误码
+ */
 errcode_t get_g_sle_mouse_server_conn_state(uint8_t *conn_state)
 {
     *conn_state = g_sle_mouse_server_conn_state;
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 获取SSAP通道支持状态
+ * @param[out] param 支持标志指针
+ * @return errcode_t 错误码
+ */
 errcode_t get_g_read_ssap_support(bool *param)
 {
     *param = g_ssap_passage_supprot;
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief SSAPS读请求回调
+ */
 static void ssaps_read_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_req_read_cb_t *read_cb_para,
     errcode_t status)
 {
@@ -182,6 +200,9 @@ static void ssaps_read_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_re
         server_id, conn_id, read_cb_para->handle, status);
 }
 
+/**
+ * @brief SSAPS写请求回调
+ */
 static void ssaps_write_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_req_write_cb_t *write_cb_para,
     errcode_t status)
 {
@@ -190,6 +211,9 @@ static void ssaps_write_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_r
         server_id, conn_id, write_cb_para->handle, status, write_cb_para->length);
 }
 
+/**
+ * @brief SSAPS MTU变化回调
+ */
 static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id,  ssap_exchange_info_t *mtu_size,
     errcode_t status)
 {
@@ -197,12 +221,18 @@ static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id,  ssap_exc
         server_id, conn_id, mtu_size->mtu_size, status);
 }
 
+/**
+ * @brief SSAPS启动服务回调
+ */
 static void ssaps_start_service_cbk(uint8_t server_id, uint16_t handle, errcode_t status)
 {
     osal_printk("[uuid server] start service cbk server_id:%x, handle:%x, status:%x\r\n",
         server_id, handle, status);
 }
 
+/**
+ * @brief SLE连接参数更新回调
+ */
 static void sle_connect_param_update_cbk(uint16_t conn_id, errcode_t status,
     const sle_connection_param_update_evt_t *param)
 {
@@ -211,6 +241,9 @@ static void sle_connect_param_update_cbk(uint16_t conn_id, errcode_t status,
     osal_printk("[uuid server] sle_connect_param_update_cbk:0x%x\r\n", status);
 }
 
+/**
+ * @brief SLE连接状态变化回调
+ */
 static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *addr,
                                           sle_acb_state_t conn_state, sle_pair_state_t pair_state,
                                           sle_disc_reason_t disc_reason)
@@ -238,6 +271,9 @@ static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *ad
     g_mouse_sle_conn_hdl = conn_id;
 }
 
+/**
+ * @brief SLE配对完成回调
+ */
 static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
 {
     osal_printk("[uuid server] pair complete conn_id:%02x, status:%x\r\n",
@@ -247,6 +283,9 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
     g_mouse_sle_pair_status = status;
 }
 
+/**
+ * @brief 注册SLE连接相关回调
+ */
 static void sle_conn_register_cbks(void)
 {
     sle_connection_callbacks_t conn_cbks = { 0 };
@@ -256,6 +295,9 @@ static void sle_conn_register_cbks(void)
     sle_connection_register_callbacks(&conn_cbks);
 }
 
+/**
+ * @brief 注册SSAPS相关回调
+ */
 static void sle_mouse_ssaps_register_cbks(void)
 {
     ssaps_callbacks_t ssaps_cbk = {0};
@@ -266,11 +308,19 @@ static void sle_mouse_ssaps_register_cbks(void)
     ssaps_register_callbacks(&ssaps_cbk);
 }
 
+/**
+ * @brief 获取Server ID
+ * @return uint8_t Server ID
+ */
 static uint8_t sle_get_server_id(void)
 {
     return g_server_id;
 }
 
+/**
+ * @brief 注册Server
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_register_server(void)
 {
     // register server
@@ -288,6 +338,12 @@ static errcode_t sle_register_server(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 设置UUID
+ * @param uuid UUID数据
+ * @param service_uuid UUID结构体
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_sample_set_uuid(uint8_t *uuid, sle_uuid_t *service_uuid)
 {
     if (memcpy_s(service_uuid->uuid, SLE_UUID_LEN, uuid, SLE_UUID_LEN) != EOK) {
@@ -298,6 +354,10 @@ static errcode_t sle_sample_set_uuid(uint8_t *uuid, sle_uuid_t *service_uuid)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加鼠标服务
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_mouse_service_add(void)
 {
     errcode_t ret;
@@ -320,6 +380,10 @@ static errcode_t sle_mouse_service_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加描述符接口
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_sample_add_descriptor_interface(uint32_t properties, uint16_t service_handle,
     uint16_t property_handle, uint16_t len, uint8_t *data)
 {
@@ -336,6 +400,10 @@ static errcode_t sle_sample_add_descriptor_interface(uint32_t properties, uint16
     return ssaps_add_descriptor_sync(sle_get_server_id(), service_handle, property_handle, &descriptor);
 }
 
+/**
+ * @brief 添加属性接口
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_sample_add_property_interface(uint32_t properties, uint8_t *uuid, uint16_t len, uint8_t *data,
     sle_item_handle_t* service_hdl)
 {
@@ -356,6 +424,10 @@ static errcode_t sle_sample_add_property_interface(uint32_t properties, uint8_t 
     return ssaps_add_property_sync(sle_get_server_id(), service_hdl->handle_in, &property, &service_hdl->handle_out);
 }
 
+/**
+ * @brief 添加鼠标属性和描述符
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_mouse_property_and_descriptor_add(void)
 {
     errcode_t ret = ERRCODE_SLE_SUCCESS;
@@ -408,6 +480,10 @@ static errcode_t sle_mouse_property_and_descriptor_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加鼠标服务端
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_mouse_server_add(void)
 {
     errcode_t ret;
@@ -437,6 +513,10 @@ static errcode_t sle_mouse_server_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加DIS服务
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_dis_service_add(void)
 {
     errcode_t ret;
@@ -458,6 +538,10 @@ static errcode_t sle_dis_service_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加DIS属性和描述符
+ * @return errcode_t 错误码
+ */
 static errcode_t sle_dis_property_and_descriptor_add(void)
 {
     errcode_t ret = ERRCODE_SLE_SUCCESS;
@@ -489,6 +573,10 @@ static errcode_t sle_dis_property_and_descriptor_add(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 添加DIS服务端
+ * @return errcode_t 错误码
+ */
 errcode_t sle_sample_dis_server_add(void)
 {
     errcode_t ret = ERRCODE_SLE_SUCCESS;
@@ -518,6 +606,11 @@ errcode_t sle_sample_dis_server_add(void)
 }
 
 /* device向host发送数据：input report */
+/**
+ * @brief 发送鼠标输入报告到主机
+ * @param mouse_data 鼠标数据
+ * @return errcode_t 错误码
+ */
 errcode_t sle_hid_mouse_server_send_input_report(ssap_mouse_key_t *mouse_data)
 {
     ssaps_ntf_ind_t param = { 0 };
@@ -538,18 +631,27 @@ errcode_t sle_hid_mouse_server_send_input_report(ssap_mouse_key_t *mouse_data)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief SLE上电回调
+ */
 static void sle_keyboard_server_sample_sle_power_on_cbk(uint8_t status)
 {
     osal_printk("sle power on: %d.\r\n", status);
     enable_sle();
 }
 
+/**
+ * @brief BLE使能回调
+ */
 static void ble_enable_cbk(uint8_t status)
 {
     osal_printk("enable status:%d\r\n", status);
     g_sle_enable = true;
 }
 
+/**
+ * @brief 注册BLE核心相关回调
+ */
 static void bt_core_enable_cb_register(void)
 {
     sle_announce_seek_callbacks_t seek_cbks = { 0 };
@@ -562,6 +664,10 @@ static void bt_core_enable_cb_register(void)
     }
 }
 
+/**
+ * @brief SLE鼠标服务端初始化
+ * @return errcode_t 错误码
+ */
 errcode_t sle_mouse_server_init(void)
 {
     bt_core_enable_cb_register();

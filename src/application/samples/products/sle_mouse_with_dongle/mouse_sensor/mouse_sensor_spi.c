@@ -1,10 +1,9 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Mouse sensorspi source \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file mouse_sensor_spi.c
+ * @brief Mouse sensorspi source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
 
 #include "spi.h"
@@ -24,13 +23,21 @@
 #define SPI_TIMEOUT                      100
 #define MOUSE_OPRATION_DELAY_US          1000
 
+/**
+ * @brief SPI时钟使能（弱符号，默认空实现）
+ */
 void spi_porting_clock_en(void) __attribute__((weak, alias("spi_porting_clock_en_none")));
 
+/**
+ * @brief SPI时钟使能空实现
+ */
 void spi_porting_clock_en_none(void)
 {
 }
 
-/* Use a GPIO instead of SPI CS interface. */
+/**
+ * @brief 用GPIO方式初始化SPI片选
+ */
 static void mouse_spi_init_cs(void)
 {
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_SPI_CS, (pin_mode_t)HAL_PIO_FUNC_GPIO);
@@ -41,6 +48,9 @@ static void mouse_spi_init_cs(void)
     uapi_tcxo_delay_ms(INIT_DELAY_MS);
 }
 
+/**
+ * @brief 配置SPI引脚复用
+ */
 static void mouse_spi_set_pinctrl(void)
 {
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_SPI_MISO, SPI_PIN_MISO_PINMUX);
@@ -52,6 +62,13 @@ static void mouse_spi_set_pinctrl(void)
 #endif
 }
 
+/**
+ * @brief 打开鼠标SPI接口
+ * @param frame_format 帧格式
+ * @param clk_polarity 时钟极性
+ * @param clk_phase 时钟相位
+ * @param mhz SPI时钟频率MHz
+ */
 void mouse_sensor_spi_open(uint8_t frame_format, uint8_t clk_polarity, uint8_t clk_phase, uint8_t mhz)
 {
     spi_attr_t config = { 0 };
@@ -75,6 +92,11 @@ void mouse_sensor_spi_open(uint8_t frame_format, uint8_t clk_polarity, uint8_t c
     (void)uapi_spi_init(MOUSE_SPI, &config, &ext_config);
 }
 
+/**
+ * @brief 读取鼠标SPI寄存器
+ * @param reg_addr 寄存器地址
+ * @return uint8_t 读取到的寄存器值
+ */
 uint8_t mouse_spi_read_reg(uint8_t reg_addr)
 {
     uint8_t addr = reg_addr;
@@ -89,6 +111,12 @@ uint8_t mouse_spi_read_reg(uint8_t reg_addr)
     return value;
 }
 
+/**
+ * @brief 鼠标SPI突发读取
+ * @param reg_addr 起始寄存器地址
+ * @param buf 数据缓冲区
+ * @param lenth 读取长度
+ */
 void mouse_spi_burst_read(uint8_t reg_addr, uint8_t *buf, uint8_t lenth)
 {
     uint8_t addr = reg_addr;
@@ -102,6 +130,11 @@ void mouse_spi_burst_read(uint8_t reg_addr, uint8_t *buf, uint8_t lenth)
     uapi_spi_master_writeread(MOUSE_SPI, &mouse_recv_xfer, SPI_TIMEOUT);
 }
 
+/**
+ * @brief 写鼠标SPI寄存器
+ * @param reg_addr 寄存器地址
+ * @param val 写入的值
+ */
 void mouse_spi_write_reg(uint8_t reg_addr, uint8_t val)
 {
     uint8_t cmd_send[SPI_MOUSE_SEND_DATA_LEN] = {reg_addr, val};
@@ -112,6 +145,11 @@ void mouse_spi_write_reg(uint8_t reg_addr, uint8_t val)
     uapi_spi_master_write(MOUSE_SPI, &mouse_send_xfer, SPI_TIMEOUT);
 }
 
+/**
+ * @brief 按配置表操作鼠标SPI
+ * @param cfg 配置表指针
+ * @param lenth 配置表长度
+ */
 void mouse_sensor_spi_opration(const spi_mouse_cfg_t *cfg, int16_t lenth)
 {
     uint8_t cmd_recv_value;

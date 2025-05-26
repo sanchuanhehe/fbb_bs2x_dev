@@ -1,11 +1,12 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Sle Mouse with dongle Sample Source. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @file sle_mouse_with_dongle.c
+ * @brief Sle鼠标与接收器样例源文件
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @author @CompanyNameTag
+ * @date 2023-08-01
+ * @details Sle鼠标与接收器样例源文件，包含主流程入口与任务创建。
  */
+
 #include "cmsis_os2.h"
 #include "app_init.h"
 #include "gadget/f_hid.h"
@@ -37,6 +38,11 @@
 #define SLE_MOUSE_TASK_DELAY_20_MS 20
 
 #if defined(CONFIG_SAMPLE_SUPPORT_SLE_MOUSE_DONGLE)
+/**
+ * @brief Sle鼠标接收器任务
+ * @param[in] arg 任务参数，未使用
+ * @return void* 任务返回值，始终为NULL
+ */
 static void *sle_mouse_dongle_task(const char *arg)
 {
 #ifdef CONFIG_SAMPLE_SLE_DONGLE_8K
@@ -72,6 +78,10 @@ static void *sle_mouse_dongle_task(const char *arg)
 }
 #endif
 
+/**
+ * @brief Sle鼠标与接收器主流程
+ * @details 根据编译选项初始化Sle鼠标或接收器相关功能。
+ */
 static void sle_mouse_with_dongle(void)
 {
 #if defined(CONFIG_SAMPLE_SUPPORT_SLE_MOUSE_DONGLE)
@@ -98,5 +108,7 @@ static void sle_mouse_with_dongle(void)
 #endif
 }
 
-/* Run the sle_mouse_with_dongle. */
+/**
+ * @brief 应用入口，运行sle_mouse_with_dongle主流程
+ */
 app_run(sle_mouse_with_dongle);

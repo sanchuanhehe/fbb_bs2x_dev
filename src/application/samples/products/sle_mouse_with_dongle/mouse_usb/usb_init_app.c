@@ -1,11 +1,11 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: USB Initialize Source. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file usb_init_app.c
+ * @brief USB Initialize Source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
+
 #include <stdbool.h>
 #include "gadget/f_hid.h"
 #include "usb_init_app.h"
@@ -44,7 +44,14 @@
 #define string_maximum(size)        (0x98 | (size))
 #define delimiter(size)             (0xa8 | (size))
 
+/**
+ * @brief USB初始化标志
+ */
 static bool g_usb_inited = false;
+
+/**
+ * @brief HID报告描述符
+ */
 static uint8_t g_report_desc_hid[ ] = {
     usage_page(1),      0x01,
     usage(1),           0x06,
@@ -109,6 +116,11 @@ static uint8_t g_report_desc_hid[ ] = {
     end_collection(0)
 };
 
+/**
+ * @brief USB初始化
+ * @param dtype 设备类型
+ * @return int HID索引，失败返回-1
+ */
 int usb_init_app(device_type dtype)
 {
     int usb_hid_index = -1;
@@ -156,6 +168,10 @@ int usb_init_app(device_type dtype)
     return usb_hid_index;
 }
 
+/**
+ * @brief USB反初始化
+ * @return int 总是返回0
+ */
 int usb_deinit_app(void)
 {
     if (g_usb_inited == false) {

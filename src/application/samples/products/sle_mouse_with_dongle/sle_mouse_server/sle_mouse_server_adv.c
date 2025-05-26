@@ -1,11 +1,11 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: Sle Mouse server adv source.
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-08-01, Create file. \n
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
+ * @file sle_mouse_server_adv.c
+ * @brief Sle Mouse server adv source
+ * @author @CompanyNameTag
+ * @date 2023-08-01
  */
+
 #include "securec.h"
 #include "errcode.h"
 #include "osal_addr.h"
@@ -41,7 +41,14 @@
 #define SLE_ADV_RSP_DATA_LEN 11
 #define BD_ADDR_LEN6 6
 
+/**
+ * @brief SLE设备管理回调结构体
+ */
 static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
+
+/**
+ * @brief SLE广播数据
+ */
 static uint8_t g_sle_adv_data[SLE_ADV_DATA_LEN] = {
     // flag
     0x01,
@@ -55,13 +62,22 @@ static uint8_t g_sle_adv_data[SLE_ADV_DATA_LEN] = {
     's', 'l', 'e', '_', 'm', 'o', 'u', 's', 'e'
 };
 
+/**
+ * @brief SLE广播响应数据
+ */
 static uint8_t g_sle_adv_rsp_data[SLE_ADV_RSP_DATA_LEN] = {
     0x0B,
     0x09, 's', 'l', 'e', '_', 'm', 'o', 'u', 's', 'e',
 };
 
+/**
+ * @brief SLE MAC地址
+ */
 static uint8_t g_sle_mac_addr[BD_ADDR_LEN6] = {0x33, 0x11, 0x44, 0x66, 0x55, 0x14};
 
+/**
+ * @brief 设置SLE本地地址
+ */
 static void sle_set_addr(void)
 {
     uint8_t *addr = g_sle_mac_addr;
@@ -75,6 +91,11 @@ static void sle_set_addr(void)
     }
     sle_set_local_addr(&sle_addr);
 }
+
+/**
+ * @brief 设置SLE默认广播参数
+ * @return int 错误码
+ */
 static int sle_set_default_announce_param(void)
 {
     sle_set_addr();
@@ -97,6 +118,10 @@ static int sle_set_default_announce_param(void)
     return sle_set_announce_param(param.announce_handle, &param);
 }
 
+/**
+ * @brief 设置SLE默认广播数据
+ * @return int 错误码
+ */
 static int sle_set_default_announce_data(void)
 {
     errcode_t ret;
@@ -118,33 +143,57 @@ static int sle_set_default_announce_data(void)
     return ERRCODE_SLE_SUCCESS;
 }
 
+/**
+ * @brief 广播使能回调
+ * @param announce_id 广播ID
+ * @param status 状态
+ */
 static void sle_adv_announce_enable_cbk(uint32_t announce_id, errcode_t status)
 {
     osal_printk("%s sle announce enable id:%02x, state:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, announce_id, status);
 }
 
+/**
+ * @brief 广播禁用回调
+ * @param announce_id 广播ID
+ * @param status 状态
+ */
 static void sle_adv_announce_disable_cbk(uint32_t announce_id, errcode_t status)
 {
     osal_printk("%s sle announce disable id:%02x, state:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, announce_id, status);
 }
 
+/**
+ * @brief 广播终止回调
+ * @param announce_id 广播ID
+ */
 static void sle_adv_announce_terminal_cbk(uint32_t announce_id)
 {
     osal_printk("%s sle announce terminal id:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, announce_id);
 }
 
+/**
+ * @brief SLE使能回调
+ * @param status 状态
+ */
 static void sle_adv_enable_cbk(uint8_t status)
 {
     osal_printk("%s sle enable status:%02x\r\n", SLE_MOUSE_DONGLE_SERVER_LOG, status);
 }
 
+/**
+ * @brief SLE上电回调
+ * @param status 状态
+ */
 static void sle_mouse_server_sample_sle_power_on_cbk(uint8_t status)
 {
     osal_printk("sle power on: %d.\r\n", status);
     enable_sle();
 }
 
-
+/**
+ * @brief 注册SLE广播相关回调
+ */
 static void sle_adv_announce_register_cbks(void)
 {
     sle_announce_seek_callbacks_t seek_cbks = { 0 };
@@ -158,6 +207,9 @@ static void sle_adv_announce_register_cbks(void)
     sle_dev_manager_register_callbacks(&g_sle_dev_mgr_cbk);
 }
 
+/**
+ * @brief SLE鼠标服务端广播初始化
+ */
 void sle_mouse_server_adv_init(void)
 {
     osal_printk("%s sle_mouse_server_adv_init in\r\n", SLE_MOUSE_DONGLE_SERVER_LOG);
