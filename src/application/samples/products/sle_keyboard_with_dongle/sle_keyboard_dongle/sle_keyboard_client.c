@@ -255,27 +255,10 @@ static void sle_keyboard_client_sample_ssapc_cbk_register(ssapc_notification_cal
     ssapc_register_callbacks(&g_sle_keyboard_ssapc_cbk);
 }
 
-// void ble_enable_cb(errcode_t status)
-// {
-//     osal_printk("%s enable status: %d\n", SLE_KEYBOARD_DONGLE_LOG, status);
-// }
-
-// void bt_core_enable_cbk_register(void)
-// {
-//     errcode_t ret;
-//     gap_ble_callbacks_t gap_cb = {0};
-//     gap_cb.ble_enable_cb = ble_enable_cb;
-//     ret = gap_ble_register_callbacks(&gap_cb);
-//     if (ret != ERRCODE_BT_SUCCESS) {
-//         osal_printk("%s register ble_enable_cb failed\r\n", SLE_KEYBOARD_DONGLE_LOG);
-//     }
-// }
-
 void sle_keyboard_client_init(ssapc_notification_callback notification_cb, ssapc_indication_callback indication_cb)
 {
     osal_mdelay(SLE_KEYBOARD_WAIT_SLE_ENABLE_MS);
     sle_remove_all_pairs();
-    // bt_core_enable_cbk_register();
     osal_mdelay(SLE_KEYBOARD_WAIT_SLE_CORE_READY_MS);
     enable_sle();
     sle_keyboard_client_sample_seek_cbk_register();
