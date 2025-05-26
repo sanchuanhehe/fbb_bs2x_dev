@@ -1,11 +1,12 @@
 /**
- * Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved. \n
- *
- * Description: SLE keyboard sample of client. \n
- * Author: @CompanyNameTag \n
- * History: \n
- * 2023-04-03, Create file. \n
+ * @file sle_keyboard_client.c
+ * @brief SLE keyboard client sample implementation / SLE键盘客户端示例实现
+ * @author @CompanyNameTag
+ * @date 2023-04-03
+ * @version 1.0
+ * @copyright Copyright (c) @CompanyNameMagicTag 2023-2023. All rights reserved.
  */
+
 #include "securec.h"
 #include "string.h"
 #include "common_def.h"
@@ -20,41 +21,73 @@
 #include "sle_device_manager.h"
 #include "bts_device_manager.h"
 
+/** @brief Default MTU size / 默认MTU大小 */
 #define SLE_MTU_SIZE_DEFAULT 300
+/** @brief Default seek interval / 默认扫描间隔 */
 #define SLE_SEEK_INTERVAL_DEFAULT 100
+/** @brief Default seek window / 默认扫描窗口 */
 #define SLE_SEEK_WINDOW_DEFAULT 100
+/** @brief 16-bit UUID length / 16位UUID长度 */
 #define UUID_16BIT_LEN 2
+/** @brief 128-bit UUID length / 128位UUID长度 */
 #define UUID_128BIT_LEN 16
+/** @brief Task delay in milliseconds / 任务延迟毫秒数 */
 #define SLE_KEYBOARD_TASK_DELAY_MS 1000
+/** @brief Wait for SLE core ready time / 等待SLE核心就绪时间 */
 #define SLE_KEYBOARD_WAIT_SLE_CORE_READY_MS 5000
+/** @brief Wait for SLE enable time / 等待SLE启用时间 */
 #define SLE_KEYBOARD_WAIT_SLE_ENABLE_MS 2000
 #ifndef SLE_KEYBOARD_SERVER_NAME
+/** @brief SLE keyboard server name / SLE键盘服务器名称 */
 #define SLE_KEYBOARD_SERVER_NAME "sle_keyboard_server"
 #endif
+/** @brief Log tag for SLE keyboard dongle / SLE键盘适配器日志标签 */
 #define SLE_KEYBOARD_DONGLE_LOG "[sle keyboard dongle]"
+/** @brief Address index 0 / 地址索引0 */
 #define ADDR_INDEX_0 0
+/** @brief Address index 4 / 地址索引4 */
 #define ADDR_INDEX_4 4
+/** @brief Address index 5 / 地址索引5 */
 #define ADDR_INDEX_5 5
 
+/** @brief SLE keyboard find service result / SLE键盘查找服务结果 */
 static ssapc_find_service_result_t g_sle_keyboard_find_service_result = {0};
+/** @brief SLE keyboard seek callbacks / SLE键盘扫描回调 */
 static sle_announce_seek_callbacks_t g_sle_keyboard_seek_cbk = {0};
+/** @brief SLE device manager callbacks / SLE设备管理器回调 */
 static sle_dev_manager_callbacks_t g_sle_dev_mgr_cbk = {0};
+/** @brief SLE keyboard connection callbacks / SLE键盘连接回调 */
 static sle_connection_callbacks_t g_sle_keyboard_connect_cbk = {0};
+/** @brief SLE keyboard SSAPC callbacks / SLE键盘SSAPC回调 */
 static ssapc_callbacks_t g_sle_keyboard_ssapc_cbk = {0};
+/** @brief SLE keyboard remote address / SLE键盘远程地址 */
 static sle_addr_t g_sle_keyboard_remote_addr = {0};
+/** @brief SLE keyboard send parameters / SLE键盘发送参数 */
 static ssapc_write_param_t g_sle_keyboard_send_param = {0};
+/** @brief SLE keyboard connection ID / SLE键盘连接ID */
 static uint16_t g_sle_keyboard_conn_id = 0;
 
+/**
+ * @brief Get SLE keyboard connection ID / 获取SLE键盘连接ID
+ * @return Connection ID / 连接ID
+ */
 uint16_t get_sle_keyboard_conn_id(void)
 {
     return g_sle_keyboard_conn_id;
 }
 
+/**
+ * @brief Get SLE keyboard send parameters / 获取SLE键盘发送参数
+ * @return Send parameters / 发送参数
+ */
 ssapc_write_param_t get_sle_keyboard_send_param(void)
 {
     return g_sle_keyboard_send_param;
 }
 
+/**
+ * @brief Start SLE keyboard scan / 启动SLE键盘扫描
+ */
 void sle_keyboard_start_scan(void)
 {
     sle_seek_param_t param = {0};
@@ -70,6 +103,10 @@ void sle_keyboard_start_scan(void)
     osal_mdelay(SLE_KEYBOARD_TASK_DELAY_MS);
 }
 
+/**
+ * @brief SLE enable callback / SLE启用回调
+ * @param[in] status Enable status / 启用状态
+ */
 static void sle_keyboard_client_sample_sle_enable_cbk(uint8_t status)
 {
     if (status != 0) {
@@ -80,12 +117,20 @@ static void sle_keyboard_client_sample_sle_enable_cbk(uint8_t status)
     }
 }
 
+/**
+ * @brief SLE power on callback / SLE开机回调
+ * @param[in] status Power on status / 开机状态
+ */
 static void sle_keyboard_client_sample_sle_power_on_cbk(uint8_t status)
 {
     osal_printk("sle power on: %d.\r\n", status);
     enable_sle();
 }
 
+/**
+ * @brief Seek enable callback / 扫描启用回调
+ * @param[in] status Enable status / 启用状态
+ */
 static void sle_keyboard_client_sample_seek_enable_cbk(errcode_t status)
 {
     if (status != 0) {
@@ -93,6 +138,10 @@ static void sle_keyboard_client_sample_seek_enable_cbk(errcode_t status)
     }
 }
 
+/**
+ * @brief Seek result info callback / 扫描结果信息回调
+ * @param[in] seek_result_data Seek result data / 扫描结果数据
+ */
 static void sle_keyboard_client_sample_seek_result_info_cbk(sle_seek_result_info_t *seek_result_data)
 {
     if (seek_result_data == NULL || seek_result_data->data == NULL) {
@@ -107,6 +156,10 @@ static void sle_keyboard_client_sample_seek_result_info_cbk(sle_seek_result_info
     }
 }
 
+/**
+ * @brief Seek disable callback / 扫描禁用回调
+ * @param[in] status Disable status / 禁用状态
+ */
 static void sle_keyboard_client_sample_seek_disable_cbk(errcode_t status)
 {
     if (status != 0) {
@@ -118,6 +171,9 @@ static void sle_keyboard_client_sample_seek_disable_cbk(errcode_t status)
     }
 }
 
+/**
+ * @brief Register seek callbacks / 注册扫描回调
+ */
 static void sle_keyboard_client_sample_seek_cbk_register(void)
 {
     g_sle_dev_mgr_cbk.sle_enable_cb = sle_keyboard_client_sample_sle_enable_cbk;
@@ -129,6 +185,14 @@ static void sle_keyboard_client_sample_seek_cbk_register(void)
     sle_dev_manager_register_callbacks(&g_sle_dev_mgr_cbk);
 }
 
+/**
+ * @brief Connection state changed callback / 连接状态改变回调
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] addr Device address / 设备地址
+ * @param[in] conn_state Connection state / 连接状态
+ * @param[in] pair_state Pair state / 配对状态
+ * @param[in] disc_reason Disconnect reason / 断开连接原因
+ */
 static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_id,
                                                                  const sle_addr_t *addr,
                                                                  sle_acb_state_t conn_state,
@@ -156,6 +220,12 @@ static void sle_keyboard_client_sample_connect_state_changed_cbk(uint16_t conn_i
     }
 }
 
+/**
+ * @brief Pair complete callback / 配对完成回调
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] addr Device address / 设备地址
+ * @param[in] status Pair status / 配对状态
+ */
 void sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
 {
     osal_printk("%s pair complete conn_id:%d, addr:%02x***%02x%02x\n", SLE_KEYBOARD_DONGLE_LOG, conn_id,
@@ -171,6 +241,9 @@ void sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_ad
     }
 }
 
+/**
+ * @brief Register connection callbacks / 注册连接回调
+ */
 static void sle_keyboard_client_sample_connect_cbk_register(void)
 {
     g_sle_keyboard_connect_cbk.connect_state_changed_cb = sle_keyboard_client_sample_connect_state_changed_cbk;
@@ -178,6 +251,13 @@ static void sle_keyboard_client_sample_connect_cbk_register(void)
     sle_connection_register_callbacks(&g_sle_keyboard_connect_cbk);
 }
 
+/**
+ * @brief Exchange info callback / 交换信息回调
+ * @param[in] client_id Client ID / 客户端ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] param Exchange info parameters / 交换信息参数
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_keyboard_client_sample_exchange_info_cbk(uint8_t client_id,
                                                          uint16_t conn_id,
                                                          ssap_exchange_info_t *param,
@@ -195,6 +275,13 @@ static void sle_keyboard_client_sample_exchange_info_cbk(uint8_t client_id,
     osal_mdelay(SLE_KEYBOARD_TASK_DELAY_MS);
 }
 
+/**
+ * @brief Find structure callback / 查找结构回调
+ * @param[in] client_id Client ID / 客户端ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] service Service result / 服务结果
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_keyboard_client_sample_find_structure_cbk(uint8_t client_id,
                                                           uint16_t conn_id,
                                                           ssapc_find_service_result_t *service,
@@ -209,6 +296,13 @@ static void sle_keyboard_client_sample_find_structure_cbk(uint8_t client_id,
     memcpy_s(&g_sle_keyboard_find_service_result.uuid, sizeof(sle_uuid_t), &service->uuid, sizeof(sle_uuid_t));
 }
 
+/**
+ * @brief Find property callback / 查找属性回调
+ * @param[in] client_id Client ID / 客户端ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] property Property result / 属性结果
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_keyboard_client_sample_find_property_cbk(uint8_t client_id,
                                                          uint16_t conn_id,
                                                          ssapc_find_property_result_t *property,
@@ -223,6 +317,13 @@ static void sle_keyboard_client_sample_find_property_cbk(uint8_t client_id,
     g_sle_keyboard_send_param.type = SSAP_PROPERTY_TYPE_VALUE;
 }
 
+/**
+ * @brief Find structure complete callback / 查找结构完成回调
+ * @param[in] client_id Client ID / 客户端ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] structure_result Structure result / 结构结果
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_keyboard_client_sample_find_structure_cmp_cbk(uint8_t client_id,
                                                               uint16_t conn_id,
                                                               ssapc_find_structure_result_t *structure_result,
@@ -233,6 +334,13 @@ static void sle_keyboard_client_sample_find_structure_cmp_cbk(uint8_t client_id,
                 SLE_KEYBOARD_DONGLE_LOG, client_id, status, structure_result->type, structure_result->uuid.len);
 }
 
+/**
+ * @brief Write confirmation callback / 写入确认回调
+ * @param[in] client_id Client ID / 客户端ID
+ * @param[in] conn_id Connection ID / 连接ID
+ * @param[in] write_result Write result / 写入结果
+ * @param[in] status Operation status / 操作状态
+ */
 static void sle_keyboard_client_sample_write_cfm_cb(uint8_t client_id,
                                                     uint16_t conn_id,
                                                     ssapc_write_result_t *write_result,
@@ -242,6 +350,11 @@ static void sle_keyboard_client_sample_write_cfm_cb(uint8_t client_id,
                 SLE_KEYBOARD_DONGLE_LOG, conn_id, client_id, status, write_result->handle, write_result->type);
 }
 
+/**
+ * @brief Register SSAPC callbacks / 注册SSAPC回调
+ * @param[in] notification_cb Notification callback / 通知回调
+ * @param[in] indication_cb Indication callback / 指示回调
+ */
 static void sle_keyboard_client_sample_ssapc_cbk_register(ssapc_notification_callback notification_cb,
                                                           ssapc_notification_callback indication_cb)
 {
@@ -255,6 +368,11 @@ static void sle_keyboard_client_sample_ssapc_cbk_register(ssapc_notification_cal
     ssapc_register_callbacks(&g_sle_keyboard_ssapc_cbk);
 }
 
+/**
+ * @brief Initialize SLE keyboard client / 初始化SLE键盘客户端
+ * @param[in] notification_cb Notification callback / 通知回调
+ * @param[in] indication_cb Indication callback / 指示回调
+ */
 void sle_keyboard_client_init(ssapc_notification_callback notification_cb, ssapc_indication_callback indication_cb)
 {
     osal_mdelay(SLE_KEYBOARD_WAIT_SLE_ENABLE_MS);
