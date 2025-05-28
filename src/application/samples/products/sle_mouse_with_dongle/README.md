@@ -93,3 +93,30 @@ graph TD
     sle_low_latency_dongle_init --> sle_low_latency_set
     sle_low_latency_dongle_init --> sle_low_latency_dongle_enable
 ````
+
+### 4. 系统架构图（System Architecture Diagram）
+
+````mermaid
+graph TD
+    subgraph 鼠标端
+        MCU1[MCU<br>主控芯片]
+        Sensor[PAW3395<br>光学传感器]
+        Button[按键模块]
+        Wheel[滚轮模块]
+        SLE[sle/ble模块]
+        MCU1 --SPI/IO--> Sensor
+        MCU1 --GPIO--> Button
+        MCU1 --GPIO--> Wheel
+        MCU1 --数据包--> SLE
+    end
+
+    subgraph Dongle端
+        MCU2[MCU<br>主控芯片]
+        SLE2[sle/蓝牙模块]
+        USB[USB接口]
+        MCU2 --数据包--> SLE2
+        MCU2 --USB HID--> USB
+    end
+
+    SLE --无线通信--> SLE2
+````
