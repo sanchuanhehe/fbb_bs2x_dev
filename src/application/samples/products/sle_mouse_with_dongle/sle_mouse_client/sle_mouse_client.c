@@ -17,25 +17,26 @@
 #include "sle_connection_manager.h"
 #include "sle_ssap_client.h"
 #include "sle_mouse_client.h"
-
+#include "sle_device_manager.h"
 #define SLE_SEEK_INTERVAL_DEFAULT 100
 #define SLE_SEEK_WINDOW_DEFAULT 100
 #define SLE_UART_TASK_DELAY_MS 1000
 
-#define SLE_MOUSE_DONGLE_CLIENT_LOG                     "[sle mouse dongle client]"
+#define SLE_MOUSE_DONGLE_CLIENT_LOG "[sle mouse dongle client]"
 
 /**
  * @brief SLE寻址回调结构体
  */
-static sle_announce_seek_callbacks_t g_sle_mouse_client_seek_cbk = { 0 };
+static sle_announce_seek_callbacks_t g_sle_mouse_client_seek_cbk = {0};
+
 /**
  * @brief SLE连接回调结构体
  */
-static sle_connection_callbacks_t g_sle_mouse_client_connect_cbk = { 0 };
+static sle_connection_callbacks_t g_sle_mouse_client_connect_cbk = {0};
 /**
  * @brief SLE鼠标服务端地址
  */
-static sle_addr_t g_sle_mouse_server_addr = { 0 };
+static sle_addr_t g_sle_mouse_server_addr = {0};
 /**
  * @brief SLE鼠标客户端连接ID
  */
@@ -44,6 +45,10 @@ static uint16_t g_sle_mouse_client_conn_id = 0;
  * @brief SLE鼠标客户端连接状态
  */
 static uint8_t g_sle_mouse_client_conn_state = SLE_ACB_STATE_NONE;
+/**
+ * @brief SLE使能状态
+ */
+static sle_dev_manager_callbacks_t g_sle_mouse_client_manager_cbk = {0};
 /**
  * @brief SLE使能标志
  */
@@ -72,7 +77,7 @@ uint16_t get_g_sle_mouse_client_conn_id(void)
  */
 static void sle_mouse_client_start_scan(void)
 {
-    sle_seek_param_t param = { 0 };
+    sle_seek_param_t param = {0};
     param.own_addr_type = 0;
     param.filter_duplicates = 0;
     param.seek_filter_policy = 0;
@@ -89,7 +94,7 @@ static void sle_mouse_client_start_scan(void)
  * @brief SLE使能回调
  * @param status 使能状态
  */
-static void sle_mouse_client_sle_enable_cbk(errcode_t status)
+static void sle_mouse_client_sle_enable_cbk(uint8_t status)
 {
     if (status != 0) {
         osal_printk("%s sle_mouse_client_sle_enable_cbk, status error\r\n", SLE_MOUSE_DONGLE_CLIENT_LOG);
@@ -122,8 +127,8 @@ static void sle_mouse_client_seek_result_info_cbk(sle_seek_result_info_t *seek_r
     if (seek_result_data == NULL) {
         osal_printk("%s status error\r\n", SLE_MOUSE_DONGLE_CLIENT_LOG);
     } else if (strstr((const char *)seek_result_data->data, (const char *)"sle_mouse") != NULL) {
-        if (memcpy_s(&g_sle_mouse_server_addr, sizeof(sle_addr_t),
-                     &seek_result_data->addr, sizeof(sle_addr_t)) != EOK) {
+        if (memcpy_s(&g_sle_mouse_server_addr, sizeof(sle_addr_t), &seek_result_data->addr, sizeof(sle_addr_t)) !=
+            EOK) {
             osal_printk("%s sle seek result data addr memcpy fail\r\n", SLE_MOUSE_DONGLE_CLIENT_LOG);
         }
 
@@ -147,17 +152,29 @@ static void sle_mouse_client_seek_disable_cbk(errcode_t status)
 }
 
 /**
+ * @brief SLE上电回调
+ * @param status 状态
+ */
+static void sle_mouse_client_sle_power_on_cbk(uint8_t status)
+{
+    osal_printk("sle power on: %d.\r\n", status);
+    enable_sle();
+}
+
+/**
  * @brief 注册SLE鼠标寻址回调
  */
 static void sle_mouse_client_seek_cbk_register(void)
 {
-    g_sle_mouse_client_seek_cbk.sle_enable_cb = sle_mouse_client_sle_enable_cbk;
+    g_sle_mouse_client_manager_cbk.sle_power_on_cb = sle_mouse_client_sle_power_on_cbk;
+    g_sle_mouse_client_manager_cbk.sle_enable_cb = sle_mouse_client_sle_enable_cbk;
     g_sle_mouse_client_seek_cbk.seek_enable_cb = sle_mouse_client_seek_enable_cbk;
     g_sle_mouse_client_seek_cbk.seek_result_cb = sle_mouse_client_seek_result_info_cbk;
     g_sle_mouse_client_seek_cbk.seek_disable_cb = sle_mouse_client_seek_disable_cbk;
     if (sle_announce_seek_register_callbacks(&g_sle_mouse_client_seek_cbk) != ERRCODE_BT_SUCCESS) {
         osal_printk("%s register ble_client_enable_cb failed\r\n", SLE_MOUSE_DONGLE_CLIENT_LOG);
     }
+    sle_dev_manager_register_callbacks(&g_sle_mouse_client_manager_cbk);
 }
 
 /**
@@ -168,8 +185,10 @@ static void sle_mouse_client_seek_cbk_register(void)
  * @param pair_state 配对状态
  * @param disc_reason 断开原因
  */
-static void sle_mouse_client_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *addr,
-                                                       sle_acb_state_t conn_state, sle_pair_state_t pair_state,
+static void sle_mouse_client_connect_state_changed_cbk(uint16_t conn_id,
+                                                       const sle_addr_t *addr,
+                                                       sle_acb_state_t conn_state,
+                                                       sle_pair_state_t pair_state,
                                                        sle_disc_reason_t disc_reason)
 {
     unused(addr);
