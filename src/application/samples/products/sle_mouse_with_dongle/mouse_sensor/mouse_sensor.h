@@ -29,8 +29,8 @@ extern "C" {
  * @brief 鼠标传感器类型
  */
 typedef enum mouse_sensor {
-    PWM3395DM,              /**< PAW3395传感器 */
-    MOUSE_SENSOR_MAX_NUM    /**< 传感器数量上限 */
+    PWM3395DM,           /**< PAW3395传感器 */
+    MOUSE_SENSOR_MAX_NUM /**< 传感器数量上限 */
 } mouse_sensor_t;
 
 /**
@@ -38,11 +38,11 @@ typedef enum mouse_sensor {
  * @brief 鼠标采样频率
  */
 typedef enum mouse_freq {
-    MOUSE_FREQ_500 = 500,   /**< 500Hz */
-    MOUSE_FREQ_1K  = 1000,  /**< 1KHz */
-    MOUSE_FREQ_2K  = 2000,  /**< 2KHz */
-    MOUSE_FREQ_4K  = 4000,  /**< 4KHz */
-    MOUSE_FREQ_8K  = 8000,  /**< 8KHz */
+    MOUSE_FREQ_500 = 500, /**< 500Hz */
+    MOUSE_FREQ_1K = 1000, /**< 1KHz */
+    MOUSE_FREQ_2K = 2000, /**< 2KHz */
+    MOUSE_FREQ_4K = 4000, /**< 4KHz */
+    MOUSE_FREQ_8K = 8000, /**< 8KHz */
     MOUSE_FREQ_MAX
 } mouse_freq_t;
 
@@ -51,16 +51,15 @@ typedef enum mouse_freq {
  * @brief 鼠标传感器操作结构体
  */
 typedef struct mouse_sensor_oprator {
-    mouse_freq_t (*init)(void);                /**< 初始化鼠标传感器 */
-    void (*get_xy)(int16_t *x, int16_t *y);    /**< 获取鼠标坐标 */
+    mouse_freq_t (*init)(void);             /**< 初始化鼠标传感器 */
+    void (*get_xy)(int16_t *x, int16_t *y); /**< 获取鼠标坐标 */
 } mouse_sensor_oprator_t;
 
 #define DELAY_MS (1000)
-#define SLE_MOUSE_TASK_DELAY_20_MS      20
-#define SLE_MOUSE_TASK_DELAY_1700_MS    1700
+#define SLE_MOUSE_TASK_DELAY_20_MS 20
+#define SLE_MOUSE_TASK_DELAY_1700_MS 1700
 
-#define trans_to_16_bit(num, bit) \
-    ((((num) & (1 << ((bit) - 1))) != 0) ? ((num) | (0xFFFF - (1 << (bit)) + 1)) : (num))
+#define trans_to_16_bit(num, bit) ((((num) & (1 << ((bit) - 1))) != 0) ? ((num) | (0xFFFF - (1 << (bit)) + 1)) : (num))
 
 /**
  * @brief 获取PAW3395操作结构体

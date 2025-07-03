@@ -21,10 +21,10 @@ get_mouse_operator g_get_mouse_sensor_operators[] = {
     sle_mouse_get_paw3395_operator
 #endif
 #ifdef CONFIG_SAMPLE_SUPPORT_SENSOR_3805
-    sle_mouse_get_paw3805_operator
+        sle_mouse_get_paw3805_operator
 #endif
 #ifdef CONFIG_SAMPLE_SUPPORT_SENSOR_3816
-    sle_mouse_get_pmw3816_operator
+            sle_mouse_get_pmw3816_operator
 #endif
 };
 

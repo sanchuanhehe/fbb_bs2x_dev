@@ -17,25 +17,25 @@
  * @def PIN_LEFT
  * @brief 鼠标左键GPIO引脚
  */
-#define PIN_LEFT        S_MGPIO2
+#define PIN_LEFT CONFIG_MOUSE_PIN_LEFT
 
 /**
  * @def PIN_RIGHT
  * @brief 鼠标右键GPIO引脚
  */
-#define PIN_RIGHT       S_MGPIO3
+#define PIN_RIGHT CONFIG_MOUSE_PIN_RIGHT
 
 /**
  * @def PIN_MID
  * @brief 鼠标中键GPIO引脚
  */
-#define PIN_MID         S_MGPIO4
+#define PIN_MID CONFIG_MOUSE_PIN_MID
 
 /**
  * @def DELAY_US200
  * @brief 按键消抖延时，单位为微秒
  */
-#define DELAY_US200     200
+#define DELAY_US200 200
 
 /**
  * @brief 全局鼠标按键状态指针

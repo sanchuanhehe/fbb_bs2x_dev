@@ -17,8 +17,8 @@ extern "C" {
 #endif /* __cplusplus */
 #endif /* __cplusplus */
 
-#define QDEC_A S_MGPIO4
-#define QDEC_B S_MGPIO3 // todo 两个QDEC的宏定义是直接copy的，可能会有冲突
+#define QDEC_A CONFIG_MOUSE_PIN_QDEC_A
+#define QDEC_B CONFIG_MOUSE_PIN_QDEC_B
 
 /**
  * @brief 初始化鼠标滚轮

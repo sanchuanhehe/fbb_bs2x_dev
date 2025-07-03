@@ -22,28 +22,29 @@ extern "C" {
  */
 typedef void (*mouse_spi_sensor_func_t)(void);
 
-#define HAL_SPI_ENABLE                   0x01
-#define HAL_SPI_TRANS_MODE_MAX           0x03
-#define HAL_SPI_TRANS_MODE_SHIFT         0x08
-#define HAL_SPI_TRANS_MODE_TXRX          0x00
-#define HAL_SPI_TRANS_MODE_TX            0x01
-#define HAL_SPI_TRANS_MODE_RX            0x02
-#define HAL_SPI_TRANS_MODE_EEPROM        0x03
-#define HAL_SPI_RECEIVED_DATA_REG_MAX    0xFFFF
-#define HAL_SPI_CE_LIN_TOGGLE_ENABLE     (BIT(24))
-#define HAL_SPI_TX_FIFO_NOT_FULL_FLAG    (BIT(1))
-#define HAL_SPI_RX_FIFO_NOT_EMPTY_FLAG   (BIT(3))
-//#define MOUSE_SPI SPI_BUS_2 //todo 宏定义冲突，将此处注释掉了。mouse_sensor_port.h中同样定义了#define MOUSE_SPI SPI_BUS_0
+#define HAL_SPI_ENABLE 0x01
+#define HAL_SPI_TRANS_MODE_MAX 0x03
+#define HAL_SPI_TRANS_MODE_SHIFT 0x08
+#define HAL_SPI_TRANS_MODE_TXRX 0x00
+#define HAL_SPI_TRANS_MODE_TX 0x01
+#define HAL_SPI_TRANS_MODE_RX 0x02
+#define HAL_SPI_TRANS_MODE_EEPROM 0x03
+#define HAL_SPI_RECEIVED_DATA_REG_MAX 0xFFFF
+#define HAL_SPI_CE_LIN_TOGGLE_ENABLE (BIT(24))
+#define HAL_SPI_TX_FIFO_NOT_FULL_FLAG (BIT(1))
+#define HAL_SPI_RX_FIFO_NOT_EMPTY_FLAG (BIT(3))
+// #define MOUSE_SPI SPI_BUS_2 //TODO 宏定义冲突，将此处注释掉了。mouse_sensor_port.h中同样定义了#define MOUSE_SPI
+// SPI_BUS_0
 
 /**
  * @enum mouse_opration
  * @brief 鼠标SPI操作类型
  */
 typedef enum mouse_opration {
-    READ,      /**< 读操作 */
-    WRITE,     /**< 写操作 */
-    DELAY,     /**< 延时操作 */
-    RUN_FUNC,  /**< 执行函数 */
+    READ,     /**< 读操作 */
+    WRITE,    /**< 写操作 */
+    DELAY,    /**< 延时操作 */
+    RUN_FUNC, /**< 执行函数 */
     MAX_OPRATION
 } mouse_opration_t;
 
@@ -52,10 +53,10 @@ typedef enum mouse_opration {
  * @brief 鼠标SPI配置结构体
  */
 typedef struct spi_mouse_cfg {
-    mouse_opration_t opration;      /**< 操作类型 */
-    uint16_t addr;                  /**< 寄存器地址或延时参数 */
-    int16_t value;                  /**< 写入值或其他参数 */
-    mouse_spi_sensor_func_t func;   /**< 回调函数指针 */
+    mouse_opration_t opration;    /**< 操作类型 */
+    uint16_t addr;                /**< 寄存器地址或延时参数 */
+    int16_t value;                /**< 写入值或其他参数 */
+    mouse_spi_sensor_func_t func; /**< 回调函数指针 */
 } spi_mouse_cfg_t;
 
 /**
