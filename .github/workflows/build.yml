@@ -3,6 +3,7 @@ name: Build and Compile
 on:
   push:
     branches:
+      - master
       - main
       - dev
       - feature*
@@ -10,6 +11,7 @@ on:
 
   pull_request:
     branches:
+      - master
       - main
       - dev
       - feature*
