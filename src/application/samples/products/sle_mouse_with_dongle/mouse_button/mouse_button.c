@@ -89,6 +89,17 @@ void mouse_button_init(mouse_key_t *mouse_key)
 {
     g_mouse_key = mouse_key;
 
+    // 初始化鼠标按键状态
+    if (g_mouse_key != NULL) {
+        g_mouse_key->b.left_key = 0;
+        g_mouse_key->b.right_key = 0;
+        g_mouse_key->b.mid_key = 0;
+        g_mouse_key->b.reserved = 0;
+    } else {
+        osal_printk("Error: mouse_key pointer is NULL.\r\n");
+        return;
+    }
+
     uapi_gpio_init();
 
     uapi_pin_set_mode(PIN_LEFT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
