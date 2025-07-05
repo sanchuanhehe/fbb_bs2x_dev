@@ -101,7 +101,9 @@ static void sle_mouse_with_dongle(void)
 #endif
 
 #if defined(CONFIG_SAMPLE_SUPPORT_SLE_MOUSE)
+    static mouse_key_t mouse_key;
     mouse_init(PWM3395DM);
+    mouse_button_init(&mouse_key);
     sle_low_latency_mouse_app_init();
     sle_low_latency_mouse_enable();
     sle_mouse_server_init();
