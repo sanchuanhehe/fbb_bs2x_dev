@@ -95,6 +95,10 @@ void mouse_button_init(mouse_key_t *mouse_key)
     uapi_pin_set_mode(PIN_RIGHT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
     uapi_pin_set_mode(PIN_MID, (pin_mode_t)HAL_PIO_FUNC_GPIO);
 
+    uapi_pin_set_pull(PIN_LEFT, PIN_PULL_UP);
+    uapi_pin_set_pull(PIN_RIGHT, PIN_PULL_UP);
+    uapi_pin_set_pull(PIN_MID, PIN_PULL_UP);
+
     gpio_select_core(PIN_LEFT, CORES_APPS_CORE);
     gpio_select_core(PIN_RIGHT, CORES_APPS_CORE);
     gpio_select_core(PIN_MID, CORES_APPS_CORE);
