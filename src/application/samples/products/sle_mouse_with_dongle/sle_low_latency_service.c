@@ -322,6 +322,15 @@ static errcode_t sle_mouse_key_set(int8_t *button_mask, int16_t *x, int16_t *y, 
     *button_mask = g_send_mouse_msg.key.d8;
     *wheel = g_send_mouse_msg.wheel;
     g_send_mouse_msg.wheel = 0;
+    
+#ifdef DEBUG
+    // 只在有移动或按键时打印，避免太多日志
+    if (*x != 0 || *y != 0 || *button_mask != 0 || *wheel != 0) {
+        osal_printk("sle_mouse_key_set: button=0x%x, x=%d, y=%d, wheel=%d\n", 
+                   *button_mask, *x, *y, *wheel);
+    }
+#endif
+    
     return ERRCODE_SUCC;
 }
 
@@ -377,13 +386,47 @@ static void dongle_low_latency_report_callback(uint8_t *data, uint8_t len)
 }
 
 /**
+ * @brief 设置EM数据回调（用于低延迟模式控制）
+ * @param[in] co_handle 连接句柄
+ * @param[in] status 状态
+ */
+static void sle_mouse_set_em_data_cbk(uint16_t co_handle, uint8_t status)
+{
+    unused(co_handle);
+    unused(status);
+    osal_printk("sle_mouse_set_em_data_cbk: co_handle=%d, status=%d\n", co_handle, status);
+}
+
+/**
  * @brief Sle低延迟鼠标应用初始化，注册回调
  */
 void sle_low_latency_mouse_app_init(void)
 {
+    osal_printk("sle_low_latency_mouse_app_init: starting mouse callback registration\n");
+    
+    // 注册mouse专用的低延迟回调
     sle_low_latency_mouse_callbacks_t mouse_cbk;
     mouse_cbk.set_value_cb = sle_mouse_key_set;
-    sle_low_latency_mouse_register_callbacks(&mouse_cbk);
+    
+    errcode_t ret = sle_low_latency_mouse_register_callbacks(&mouse_cbk);
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_mouse_app_init: register mouse callbacks failed, ret=0x%x\n", ret);
+    } else {
+        osal_printk("sle_low_latency_mouse_app_init: mouse callbacks registered successfully\n");
+    }
+    
+    // 同时注册通用的低延迟回调（用于EM数据控制）
+    sle_low_latency_callbacks_t cbks = {0};
+    cbks.hid_data_cb = NULL;  // mouse模式不需要hid_data_cb，使用专用的mouse回调
+    cbks.sle_set_em_data_cb = sle_mouse_set_em_data_cbk;
+    
+    ret = sle_low_latency_register_callbacks(&cbks);
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_mouse_app_init: register general callbacks failed, ret=0x%x\n", ret);
+    } else {
+        osal_printk("sle_low_latency_mouse_app_init: general callbacks registered successfully\n");
+    }
+    
     return;
 }
 
