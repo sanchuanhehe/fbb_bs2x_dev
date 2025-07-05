@@ -486,8 +486,11 @@ void sle_low_latency_dongle_init(int usb_hid_index)
 {
     g_usb_mouse_hid_index = usb_hid_index;
     
+    osal_printk("sle_low_latency_dongle_init: starting initialization...\n");
+    
     // 注册USB SOF回调
     usb_register_callback(&dongle_cbk);
+    osal_printk("sle_low_latency_dongle_init: USB SOF callback registered\n");
     
     // 注册SLE低延迟Dongle回调
     sle_low_latency_dongle_callbacks_t dongle_cbk_struct = {0};
@@ -495,16 +498,18 @@ void sle_low_latency_dongle_init(int usb_hid_index)
     
     errcode_t ret = sle_low_latency_dongle_register_callbacks(&dongle_cbk_struct);
     if (ret != ERRCODE_SLE_SUCCESS) {
-        osal_printk("sle_low_latency_dongle_init: register callbacks failed, ret=%d\n", ret);
+        osal_printk("sle_low_latency_dongle_init: register callbacks failed, ret=0x%x\n", ret);
         return;
     }
+    osal_printk("sle_low_latency_dongle_init: SLE low latency callbacks registered\n");
     
     // 使能SLE低延迟Dongle
     ret = sle_low_latency_dongle_enable();
     if (ret != ERRCODE_SLE_SUCCESS) {
-        osal_printk("sle_low_latency_dongle_init: enable dongle failed, ret=%d\n", ret);
+        osal_printk("sle_low_latency_dongle_init: enable dongle failed, ret=0x%x\n", ret);
         return;
     }
+    osal_printk("sle_low_latency_dongle_init: SLE low latency dongle enabled\n");
     
     osal_printk("sle_low_latency_dongle_init: initialized successfully\n");
 }

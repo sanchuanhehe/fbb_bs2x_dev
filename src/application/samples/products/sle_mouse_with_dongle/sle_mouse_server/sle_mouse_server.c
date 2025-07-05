@@ -14,6 +14,7 @@
 #include "osal_addr.h"
 #include "sle_common.h"
 #include "sle_errcode.h"
+#include "sle_low_latency.h"
 #include "bts_le_gap.h"
 #include "sle_connection_manager.h"
 #include "sle_device_discovery.h"
@@ -284,9 +285,16 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
         addr->addr[BT_INDEX_0], addr->addr[BT_INDEX_4], addr->addr[BT_INDEX_5]);
     g_mouse_sle_pair_status = status;
     
-    // 配对完成后注册低延迟回调（修复鉴权失败问题）
+    // 配对完成后注册并启用低延迟回调（修复鉴权失败问题）
     if (status == ERRCODE_SLE_SUCCESS) {
         sle_low_latency_mouse_app_init();
+        // 在配对成功并注册回调后启用低延迟功能
+        errcode_t ret = sle_low_latency_mouse_enable();
+        if (ret != ERRCODE_SLE_SUCCESS) {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_mouse_enable failed, ret=0x%x\n", ret);
+        } else {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_mouse_enable success\n");
+        }
     }
 }
 

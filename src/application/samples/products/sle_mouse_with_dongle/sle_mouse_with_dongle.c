@@ -19,7 +19,6 @@
 #include "sle_errcode.h"
 #include "sle_connection_manager.h"
 #include "sle_device_discovery.h"
-#include "sle_low_latency.h"
 #include "mouse_usb/usb_init_app.h"
 #include "mouse_button/mouse_button.h"
 #include "mouse_sensor/mouse_sensor.h"
@@ -102,8 +101,8 @@ static void sle_mouse_with_dongle(void)
 
 #if defined(CONFIG_SAMPLE_SUPPORT_SLE_MOUSE)
     mouse_init(PWM3395DM);
-    sle_low_latency_mouse_app_init();
-    sle_low_latency_mouse_enable();
+    // 注意：sle_low_latency_mouse_app_init() 和 sle_low_latency_mouse_enable() 
+    // 现在在配对完成后才调用（在sle_pair_complete_cbk中）
     sle_mouse_server_init();
 #endif
 }
