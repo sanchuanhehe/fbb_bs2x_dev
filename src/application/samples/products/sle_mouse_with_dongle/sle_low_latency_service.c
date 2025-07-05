@@ -101,6 +101,8 @@
 #else
 #define REPORT_TIME 7
 #endif
+
+#define DEBUG
 uint8_t g_report_time = REPORT_TIME;
 
 typedef struct usb_hid_mouse_report {
@@ -125,7 +127,8 @@ static mouse_sensor_oprator_t g_usb_hid_hs_mouse_operator = {0};
 static usb_hid_mouse_report_t g_send_mouse_msg = {0};
 static qdec_config_t g_usb_qdec_config = QDEC_DEFAULT_CONFIG;
 static int g_usb_mouse_hid_index;
-extern errcode_t sle_low_latency_dongle_get_em_data(uint8_t *em_data);
+static uint8_t g_dongle_data_buffer[32] = {0};  // 存储接收到的低延迟数据
+static bool g_dongle_data_ready = false;
 
 /**
  * @brief 发送鼠标消息到SSAP
@@ -156,10 +159,20 @@ static bool sle_send_msg(void)
  */
 static void mouse_left_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_left_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.left_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
-    sle_send_msg();
+    
+#ifdef DEBUG
+    osal_printk("Left button: key_mask=0x%02x, pressed=%d\n", g_mouse_notify_data.button_mask, g_send_mouse_msg.key.b.left_key);
+#endif
+    
+    // 注意：不再直接调用sle_send_msg()，而是让低延迟系统通过sle_mouse_key_set回调来获取数据
+    // 数据会被低延迟系统自动获取并通过低延迟通道发送
+    
     uapi_gpio_clear_interrupt(pin);
 }
 
@@ -169,10 +182,20 @@ static void mouse_left_button_func(pin_t pin)
  */
 static void mouse_right_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_right_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.right_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
-    sle_send_msg();
+    
+#ifdef DEBUG
+    osal_printk("Right button: key_mask=0x%02x, pressed=%d\n", g_mouse_notify_data.button_mask, g_send_mouse_msg.key.b.right_key);
+#endif
+    
+    // 注意：不再直接调用sle_send_msg()，而是让低延迟系统通过sle_mouse_key_set回调来获取数据
+    // 数据会被低延迟系统自动获取并通过低延迟通道发送
+    
     uapi_gpio_clear_interrupt(pin);
 }
 
@@ -182,10 +205,20 @@ static void mouse_right_button_func(pin_t pin)
  */
 static void mouse_mid_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_mid_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.mid_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
-    sle_send_msg();
+    
+#ifdef DEBUG
+    osal_printk("Mid button: key_mask=0x%02x, pressed=%d\n", g_mouse_notify_data.button_mask, g_send_mouse_msg.key.b.mid_key);
+#endif
+    
+    // 注意：不再直接调用sle_send_msg()，而是让低延迟系统通过sle_mouse_key_set回调来获取数据
+    // 数据会被低延迟系统自动获取并通过低延迟通道发送
+    
     uapi_gpio_clear_interrupt(pin);
 }
 
@@ -215,6 +248,10 @@ static void mouse_io_init(void)
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_LEFT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_RIGHT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_MID, (pin_mode_t)HAL_PIO_FUNC_GPIO);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_LEFT, PIN_PULL_UP);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_RIGHT, PIN_PULL_UP);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_MID, PIN_PULL_UP);
+
     gpio_select_core(CONFIG_MOUSE_PIN_LEFT, CORES_APPS_CORE);
     gpio_select_core(CONFIG_MOUSE_PIN_RIGHT, CORES_APPS_CORE);
     gpio_select_core(CONFIG_MOUSE_PIN_MID, CORES_APPS_CORE);
@@ -299,7 +336,30 @@ static errcode_t sle_mouse_key_set(int8_t *button_mask, int16_t *x, int16_t *y, 
     *button_mask = g_send_mouse_msg.key.d8;
     *wheel = g_send_mouse_msg.wheel;
     g_send_mouse_msg.wheel = 0;
-    return ERRCODE_SUCC;
+    
+#ifdef DEBUG
+    // 打印每次调用情况（用于调试低延迟回调是否被正确调用）
+    static uint32_t call_count = 0;
+    call_count++;
+    
+    // 只在有移动或按键时打印详细信息
+    if (*x != 0 || *y != 0 || *button_mask != 0 || *wheel != 0) {
+        osal_printk("sle_mouse_key_set[%d]: button=0x%x, x=%d, y=%d, wheel=%d\n", 
+                   call_count, *button_mask, *x, *y, *wheel);
+    } else if (call_count % 1000 == 0) {
+        // 每1000次调用打印一次，确认回调在正常工作
+        osal_printk("sle_mouse_key_set[%d]: callback working (no data)\n", call_count);
+    }
+#endif
+    
+    // 返回 ERRCODE_SUCC 表示有数据需要发送
+    // 如果没有数据变化，可以考虑返回 SLE_LOW_LATENCY_VALUE_GET_FAIL 来避免发送
+    if (*x != 0 || *y != 0 || *button_mask != 0 || *wheel != 0) {
+        return ERRCODE_SUCC;  // 有数据，发送
+    } else {
+        // 对于鼠标应用，即使没有变化也应该定期发送状态
+        return ERRCODE_SUCC;  // 继续发送，保持连接活跃
+    }
 }
 
 /**
@@ -320,13 +380,79 @@ void sle_mouse_get_key(void)
 }
 
 /**
+ * @brief 低延迟数据回调函数（Dongle端接收数据）
+ * @param[in] data 接收到的数据
+ * @param[in] len 数据长度
+ */
+static void dongle_low_latency_report_callback(uint8_t *data, uint8_t len)
+{
+    osal_printk("dongle_low_latency_report_callback: received %d bytes\n", len);
+    
+    if (data == NULL || len == 0 || len > sizeof(g_dongle_data_buffer)) {
+        osal_printk("dongle_low_latency_report_callback: invalid data, len=%d\n", len);
+        return;
+    }
+    
+    // 将接收到的数据缓存起来
+    if (memcpy_s(g_dongle_data_buffer, sizeof(g_dongle_data_buffer), data, len) != EOK) {
+        osal_printk("dongle_low_latency_report_callback: memcpy failed\n");
+        return;
+    }
+    
+    g_dongle_data_ready = true;
+    
+#ifdef DEBUG
+    // 打印接收到的原始数据
+    osal_printk("dongle_low_latency_report_callback: raw data = ");
+    for (uint8_t i = 0; i < len; i++) {
+        osal_printk("%02x ", data[i]);
+    }
+    osal_printk("\n");
+#endif
+}
+
+/**
+ * @brief 设置EM数据回调（用于低延迟模式控制）
+ * @param[in] co_handle 连接句柄
+ * @param[in] status 状态
+ */
+static void sle_mouse_set_em_data_cbk(uint16_t co_handle, uint8_t status)
+{
+    unused(co_handle);
+    unused(status);
+    osal_printk("sle_mouse_set_em_data_cbk: co_handle=%d, status=%d\n", co_handle, status);
+}
+
+/**
  * @brief Sle低延迟鼠标应用初始化，注册回调
  */
 void sle_low_latency_mouse_app_init(void)
 {
+    osal_printk("sle_low_latency_mouse_app_init: starting mouse callback registration\n");
+    
+    // 注册mouse专用的低延迟回调
     sle_low_latency_mouse_callbacks_t mouse_cbk;
     mouse_cbk.set_value_cb = sle_mouse_key_set;
-    sle_low_latency_mouse_register_callbacks(&mouse_cbk);
+    
+    errcode_t ret = sle_low_latency_mouse_register_callbacks(&mouse_cbk);
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_mouse_app_init: register mouse callbacks failed, ret=0x%x\n", ret);
+    } else {
+        osal_printk("sle_low_latency_mouse_app_init: mouse callbacks registered successfully\n");
+    }
+    
+    // 同时注册通用的低延迟回调（用于EM数据控制）
+    sle_low_latency_callbacks_t cbks = {0};
+    cbks.hid_data_cb = NULL;  // mouse模式不需要hid_data_cb，使用专用的mouse回调
+    cbks.sle_set_em_data_cb = sle_mouse_set_em_data_cbk;
+    
+    ret = sle_low_latency_register_callbacks(&cbks);
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_mouse_app_init: register general callbacks failed, ret=0x%x\n", ret);
+    } else {
+        osal_printk("sle_low_latency_mouse_app_init: general callbacks registered successfully\n");
+    }
+    
     return;
 }
 
@@ -339,25 +465,74 @@ void sle_low_latency_mouse_app_init(void)
 void dongle_cbk(uint8_t **data, uint16_t *length, uint8_t *device_index)
 {
     static uint8_t report_count = 0;
+    static uint32_t total_call_count = 0;
+    
+    total_call_count++;
+    
+    // 添加调试：定期打印调用状态
+    if (total_call_count % 5000 == 0) {
+        osal_printk("dongle_cbk: called %d times, report_time=%d, data_ready=%d\n", 
+                   total_call_count, g_report_time, g_dongle_data_ready);
+    }
+    
     if (report_count < g_report_time) {
         report_count++;
         return;
     }
     report_count = 0;
-    static usb_hid_mouse_report_t mouse_message = {0}; // must be static or global variabal
+
+    static usb_hid_mouse_report_t mouse_message = {0};
     low_latency_mouse_t key_base = {0};
-    if (sle_low_latency_dongle_get_em_data((uint8_t *)&key_base) != 0) {
+
+    // 检查是否有新的低延迟数据
+    if (!g_dongle_data_ready) {
+        // 减少 debug 输出频率
+        if (total_call_count % 10000 == 0) {
+            osal_printk("dongle_cbk: no data ready (call #%d)\n", total_call_count);
+        }
         return;
     }
+
+    osal_printk("dongle_cbk: processing data (call #%d)\n", total_call_count);
+
+    // 检查数据长度是否正确
+    if (sizeof(g_dongle_data_buffer) < sizeof(low_latency_mouse_t)) {
+        osal_printk("dongle_cbk: buffer size too small\n");
+        return;
+    }
+
+    // 从缓存中读取数据
+    if (memcpy_s(&key_base, sizeof(key_base), g_dongle_data_buffer, sizeof(key_base)) != EOK) {
+        osal_printk("dongle_cbk: memcpy from buffer failed\n");
+        return;
+    }
+    
+    g_dongle_data_ready = false;  // 数据已消费，清除标志
+
+    // 添加调试：打印接收到的原始数据
+    osal_printk("dongle_cbk: raw data - button=0x%02x, x=%d, y=%d, wheel=%d\n", key_base.button_mask, key_base.x,
+                key_base.y, key_base.wheel);
+
     mouse_message.key.d8 = key_base.button_mask;
     mouse_message.x = key_base.x;
     mouse_message.y = key_base.y;
     mouse_message.wheel = key_base.wheel;
     mouse_message.kind = MOUSE_KIND;
 
+    // 添加调试：打印最终USB报告
+    if (key_base.button_mask != 0 || key_base.x != 0 || key_base.y != 0 || key_base.wheel != 0) {
+        osal_printk("dongle_cbk: USB report - kind=0x%02x, key=0x%02x, x=%d, y=%d, wheel=%d\n", mouse_message.kind,
+                    mouse_message.key.d8, mouse_message.x, mouse_message.y, mouse_message.wheel);
+    }
+
     *data = (uint8_t *)&mouse_message;
     *length = sizeof(usb_hid_mouse_report_t);
     *device_index = g_usb_mouse_hid_index;
+
+#ifdef DEBUG
+    // 添加调试：确认数据已设置
+    osal_printk("dongle_cbk: data set, length=%d, device_index=%d\n", *length, *device_index);
+#endif
 }
 
 /**
@@ -382,11 +557,37 @@ void usb_sle_high_mouse_report(uint8_t *data, uint8_t lenth)
 }
 
 /**
- * @brief Sle低延迟dongle初始化，注册USB回调
+ * @brief Sle低延迟dongle初始化，注册USB回调和低延迟回调
  * @param[in] usb_hid_index USB HID索引
  */
 void sle_low_latency_dongle_init(int usb_hid_index)
 {
     g_usb_mouse_hid_index = usb_hid_index;
+    
+    osal_printk("sle_low_latency_dongle_init: starting initialization...\n");
+    
+    // 注册USB SOF回调
     usb_register_callback(&dongle_cbk);
+    osal_printk("sle_low_latency_dongle_init: USB SOF callback registered\n");
+    
+    // 注册SLE低延迟Dongle回调
+    sle_low_latency_dongle_callbacks_t dongle_cbk_struct = {0};
+    dongle_cbk_struct.report_cb = dongle_low_latency_report_callback;
+    
+    errcode_t ret = sle_low_latency_dongle_register_callbacks(&dongle_cbk_struct);
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_dongle_init: register callbacks failed, ret=0x%x\n", ret);
+        return;
+    }
+    osal_printk("sle_low_latency_dongle_init: SLE low latency callbacks registered\n");
+    
+    // 使能SLE低延迟Dongle
+    ret = sle_low_latency_dongle_enable();
+    if (ret != ERRCODE_SLE_SUCCESS) {
+        osal_printk("sle_low_latency_dongle_init: enable dongle failed, ret=0x%x\n", ret);
+        return;
+    }
+    osal_printk("sle_low_latency_dongle_init: SLE low latency dongle enabled\n");
+    
+    osal_printk("sle_low_latency_dongle_init: initialized successfully\n");
 }

@@ -14,6 +14,7 @@
 #include "osal_addr.h"
 #include "sle_common.h"
 #include "sle_errcode.h"
+#include "sle_low_latency.h"
 #include "bts_le_gap.h"
 #include "sle_connection_manager.h"
 #include "sle_device_discovery.h"
@@ -22,6 +23,8 @@
 #include "sle_mouse_server.h"
 #include "sle_device_manager.h"
 #include "bts_device_manager.h"
+#include "../mouse_sensor/mouse_sensor.h"
+#include "../sle_low_latency_service.h"
 
 #define SLE_ADV_HANDLE_DEFAULT     1
 #define USB_MOUSE_TASK_DELAY_MS    2000
@@ -255,6 +258,17 @@ static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *ad
         osal_printk("%02x ", addr->addr[i]);
     }
     osal_printk("\r\n");
+    
+    // 打印配对状态详细信息
+    const char* pair_state_str;
+    switch(pair_state) {
+        case SLE_PAIR_NONE:    pair_state_str = "SLE_PAIR_NONE(0x01)"; break;
+        case SLE_PAIR_PAIRING: pair_state_str = "SLE_PAIR_PAIRING(0x02)"; break;
+        case SLE_PAIR_PAIRED:  pair_state_str = "SLE_PAIR_PAIRED(0x03)"; break;
+        default:               pair_state_str = "UNKNOWN"; break;
+    }
+    osal_printk("Pair state detail: %s\r\n", pair_state_str);
+    
     sle_connection_param_update_t con_param = {0};
     con_param.conn_id = conn_id;
     con_param.interval_max = 100; // 100个slot  每个0.125ms
@@ -263,6 +277,46 @@ static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *ad
     con_param.supervision_timeout = 500; // 设置连接延迟500ms
     if (conn_state == SLE_ACB_STATE_CONNECTED) {
         sle_update_connect_param(&con_param);
+        
+        // 检查配对状态，如果已配对则初始化低延迟功能
+        if (pair_state == SLE_PAIR_PAIRED) {
+            osal_printk("Pair completed in connect state callback, initializing low latency...\r\n");
+            sle_low_latency_mouse_app_init();
+            // 在配对成功并注册回调后启用低延迟功能
+            errcode_t ret = sle_low_latency_mouse_enable();
+            if (ret != ERRCODE_SLE_SUCCESS) {
+                osal_printk("[connect_state_changed] sle_low_latency_mouse_enable failed, ret=0x%x\n", ret);
+            } else {
+                osal_printk("[connect_state_changed] sle_low_latency_mouse_enable success\n");
+            }
+            
+            // 启用低延迟EM数据模式
+            ret = sle_low_latency_set_em_data(conn_id, 1);
+            if (ret != ERRCODE_SLE_SUCCESS) {
+                osal_printk("[connect_state_changed] sle_low_latency_set_em_data failed, ret=0x%x\n", ret);
+            } else {
+                osal_printk("[connect_state_changed] sle_low_latency_set_em_data success\n");
+            }
+        } else if (pair_state == SLE_PAIR_NONE) {
+            // 无配对连接，直接初始化低延迟功能
+            osal_printk("No pairing connection detected, initializing low latency directly...\r\n");
+            sle_low_latency_mouse_app_init();
+            // 启用低延迟功能
+            errcode_t ret = sle_low_latency_mouse_enable();
+            if (ret != ERRCODE_SLE_SUCCESS) {
+                osal_printk("[connect_state_changed] sle_low_latency_mouse_enable failed, ret=0x%x\n", ret);
+            } else {
+                osal_printk("[connect_state_changed] sle_low_latency_mouse_enable success\n");
+            }
+            
+            // 启用低延迟EM数据模式
+            ret = sle_low_latency_set_em_data(conn_id, 1);
+            if (ret != ERRCODE_SLE_SUCCESS) {
+                osal_printk("[connect_state_changed] sle_low_latency_set_em_data failed, ret=0x%x\n", ret);
+            } else {
+                osal_printk("[connect_state_changed] sle_low_latency_set_em_data success\n");
+            }
+        }
     } else if (conn_state == SLE_ACB_STATE_DISCONNECTED) {
         g_ssap_passage_supprot = false;
         sle_start_announce(SLE_ADV_HANDLE_DEFAULT);
@@ -281,6 +335,26 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
     osal_printk("[uuid server] pair complete addr:%02x:**:**:**:%02x:%02x\r\n",
         addr->addr[BT_INDEX_0], addr->addr[BT_INDEX_4], addr->addr[BT_INDEX_5]);
     g_mouse_sle_pair_status = status;
+    
+    // 配对完成后注册并启用低延迟回调（修复鉴权失败问题）
+    if (status == ERRCODE_SLE_SUCCESS) {
+        sle_low_latency_mouse_app_init();
+        // 在配对成功并注册回调后启用低延迟功能
+        errcode_t ret = sle_low_latency_mouse_enable();
+        if (ret != ERRCODE_SLE_SUCCESS) {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_mouse_enable failed, ret=0x%x\n", ret);
+        } else {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_mouse_enable success\n");
+        }
+        
+        // 启用低延迟EM数据模式
+        ret = sle_low_latency_set_em_data(conn_id, 1);
+        if (ret != ERRCODE_SLE_SUCCESS) {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_set_em_data failed, ret=0x%x\n", ret);
+        } else {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_set_em_data success\n");
+        }
+    }
 }
 
 /**
