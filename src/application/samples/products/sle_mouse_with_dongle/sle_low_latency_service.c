@@ -101,6 +101,8 @@
 #else
 #define REPORT_TIME 7
 #endif
+
+#define DEBUG
 uint8_t g_report_time = REPORT_TIME;
 
 typedef struct usb_hid_mouse_report {
@@ -156,6 +158,9 @@ static bool sle_send_msg(void)
  */
 static void mouse_left_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_left_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.left_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
@@ -169,6 +174,9 @@ static void mouse_left_button_func(pin_t pin)
  */
 static void mouse_right_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_right_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.right_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
@@ -182,6 +190,9 @@ static void mouse_right_button_func(pin_t pin)
  */
 static void mouse_mid_button_func(pin_t pin)
 {
+#ifdef DEBUG
+    osal_printk("mouse_mid_button_func: pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+#endif
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.mid_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
