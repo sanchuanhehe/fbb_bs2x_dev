@@ -22,6 +22,8 @@
 #include "sle_mouse_server.h"
 #include "sle_device_manager.h"
 #include "bts_device_manager.h"
+#include "../mouse_sensor/mouse_sensor.h"
+#include "../sle_low_latency_service.h"
 
 #define SLE_ADV_HANDLE_DEFAULT     1
 #define USB_MOUSE_TASK_DELAY_MS    2000
@@ -281,6 +283,11 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
     osal_printk("[uuid server] pair complete addr:%02x:**:**:**:%02x:%02x\r\n",
         addr->addr[BT_INDEX_0], addr->addr[BT_INDEX_4], addr->addr[BT_INDEX_5]);
     g_mouse_sle_pair_status = status;
+    
+    // 配对完成后注册低延迟回调（修复鉴权失败问题）
+    if (status == ERRCODE_SLE_SUCCESS) {
+        sle_low_latency_mouse_app_init();
+    }
 }
 
 /**

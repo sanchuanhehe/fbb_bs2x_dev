@@ -366,20 +366,39 @@ void dongle_cbk(uint8_t **data, uint16_t *length, uint8_t *device_index)
         return;
     }
     report_count = 0;
-    static usb_hid_mouse_report_t mouse_message = {0}; // must be static or global variabal
+
+    static usb_hid_mouse_report_t mouse_message = {0};
     low_latency_mouse_t key_base = {0};
-    if (sle_low_latency_dongle_get_em_data((uint8_t *)&key_base) != 0) {
+
+    // 添加调试：检查数据获取状态
+    int ret = sle_low_latency_dongle_get_em_data((uint8_t *)&key_base);
+    if (ret != 0) {
+        osal_printk("dongle_cbk: get_em_data failed, ret=%d\n", ret);
         return;
     }
+
+    // 添加调试：打印接收到的原始数据
+    osal_printk("dongle_cbk: raw data - button=0x%02x, x=%d, y=%d, wheel=%d\n", key_base.button_mask, key_base.x,
+                key_base.y, key_base.wheel);
+
     mouse_message.key.d8 = key_base.button_mask;
     mouse_message.x = key_base.x;
     mouse_message.y = key_base.y;
     mouse_message.wheel = key_base.wheel;
     mouse_message.kind = MOUSE_KIND;
 
+    // 添加调试：打印最终USB报告
+    if (key_base.button_mask != 0 || key_base.x != 0 || key_base.y != 0 || key_base.wheel != 0) {
+        osal_printk("dongle_cbk: USB report - kind=0x%02x, key=0x%02x, x=%d, y=%d, wheel=%d\n", mouse_message.kind,
+                    mouse_message.key.d8, mouse_message.x, mouse_message.y, mouse_message.wheel);
+    }
+
     *data = (uint8_t *)&mouse_message;
     *length = sizeof(usb_hid_mouse_report_t);
     *device_index = g_usb_mouse_hid_index;
+
+    // 添加调试：确认数据已设置
+    osal_printk("dongle_cbk: data set, length=%d, device_index=%d\n", *length, *device_index);
 }
 
 /**
