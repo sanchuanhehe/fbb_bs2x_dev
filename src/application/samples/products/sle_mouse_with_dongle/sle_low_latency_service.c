@@ -164,7 +164,14 @@ static void mouse_left_button_func(pin_t pin)
     uapi_tcxo_delay_us(DELAY_US200);
     g_send_mouse_msg.key.b.left_key = !uapi_gpio_get_val(pin);
     g_mouse_notify_data.button_mask = g_send_mouse_msg.key.d8;
+    #ifdef DEBUG
+    int ret = sle_send_msg();
+    if (ret == false) {
+        osal_printk("sle_send_msg failed, pin %d, val %d\n", pin, uapi_gpio_get_val(pin));
+    }
+    #else
     sle_send_msg();
+    #endif
     uapi_gpio_clear_interrupt(pin);
 }
 
