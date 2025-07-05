@@ -295,6 +295,14 @@ static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errc
         } else {
             osal_printk("[sle_pair_complete_cbk] sle_low_latency_mouse_enable success\n");
         }
+        
+        // 启用低延迟EM数据模式
+        ret = sle_low_latency_set_em_data(conn_id, 1);
+        if (ret != ERRCODE_SLE_SUCCESS) {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_set_em_data failed, ret=0x%x\n", ret);
+        } else {
+            osal_printk("[sle_pair_complete_cbk] sle_low_latency_set_em_data success\n");
+        }
     }
 }
 
