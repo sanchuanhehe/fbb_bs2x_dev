@@ -215,6 +215,10 @@ static void mouse_io_init(void)
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_LEFT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_RIGHT, (pin_mode_t)HAL_PIO_FUNC_GPIO);
     uapi_pin_set_mode(CONFIG_MOUSE_PIN_MID, (pin_mode_t)HAL_PIO_FUNC_GPIO);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_LEFT, PIN_PULL_UP);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_RIGHT, PIN_PULL_UP);
+    uapi_pin_set_pull(CONFIG_MOUSE_PIN_MID, PIN_PULL_UP);
+
     gpio_select_core(CONFIG_MOUSE_PIN_LEFT, CORES_APPS_CORE);
     gpio_select_core(CONFIG_MOUSE_PIN_RIGHT, CORES_APPS_CORE);
     gpio_select_core(CONFIG_MOUSE_PIN_MID, CORES_APPS_CORE);
