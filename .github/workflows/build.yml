@@ -3,14 +3,19 @@ name: Build and Compile
 on:
   push:
     branches:
+      - master
       - main
       - dev
       - feature*
+      - 'feature/**'
+
   pull_request:
     branches:
+      - master
       - main
       - dev
       - feature*
+      - 'feature/**'
 
 jobs:
   build:
